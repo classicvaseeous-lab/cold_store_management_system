@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: coldstore-django
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn coldstore.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: coldstore.settings
+      - key: SECRET_KEY
+        generate: true
+      - key: DEBUG
+        value: "False"
