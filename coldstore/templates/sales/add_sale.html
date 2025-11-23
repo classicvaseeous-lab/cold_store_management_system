@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load form_filters %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md mt-10">
+  <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-gray-100">➕ Add Sale</h2>
+
+  <form method="post" id="saleForm">{% csrf_token %}
+    <!-- Customer Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1">
+        {{ form.customer_name.label }}
+      </label>
+      {{ form.customer_name|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-700 p-2 focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <!-- Payment Method -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1">
+        {{ form.payment_method.label }}
+      </label>
+      {{ form.payment_method|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-700 p-2 focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <!-- Total Amount -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1">
+        {{ form.total_amount.label }}
+      </label>
+      {{ form.total_amount|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-700 p-2 focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <!-- Dynamic Items -->
+    <div id="items" class="space-y-4">
+      {% for formset_form in form.items.forms %}
+      <div class="grid grid-cols-12 gap-3 items-end border border-slate-200 dark:border-gray-700 p-4 rounded-lg bg-slate-50 dark:bg-gray-700 hover:shadow-md transition item-row">
+        <div class="col-span-5">
+          {{ formset_form.product|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-600 p-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div class="col-span-3">
+          {{ formset_form.quantity|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-600 p-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div class="col-span-3">
+          {{ formset_form.unit_price|add_class:"w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-600 p-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div class="col-span-1 flex justify-end">
+          <button type="button" class="remove-item px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition">✕</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Add Item Button -->
+    <div class="mt-4">
+      <button type="button" id="addItem" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">+ Add Item</button>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="mt-6">
+      <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+        Add Sale
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- JavaScript for dynamic items -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const addBtn = document.getElementById('addItem');
+  const itemsContainer = document.getElementById('items');
+
+  addBtn.addEventListener('click', () => {
+    // Clone the first item row
+    const firstRow = itemsContainer.querySelector('.item-row');
+    const newRow = firstRow.cloneNode(true);
+
+    // Reset input values
+    newRow.querySelectorAll('input, select').forEach(input => input.value = '');
+    itemsContainer.appendChild(newRow);
+  });
+
+  // Delegate remove button click
+  itemsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-item')) {
+      const row = e.target.closest('.item-row');
+      if (itemsContainer.children.length > 1) { // keep at least one row
+        row.remove();
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
+
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<div>
+  {{ form.customer_name.label_tag }}
+  {{ form.customer_name }}
+</div>
+<div>
+  {{ form.payment_method.label_tag }}
+  {{ form.payment_method }}
+</div>
+<div>
+  {{ form.total_amount.label_tag }}
+  {{ form.total_amount }}
+</div>
+{% comment %} added by frank for further use  
+<div>
+  {{ form.items.label_tag }}
+  {{ form.items }}
+</div>
+<div class="mt-4">
+  <button class="px-4 py-2 bg-blue-600 text-white rounded">Add Sale</button>
+</div>
+{% endblock %} {% endcomment %}

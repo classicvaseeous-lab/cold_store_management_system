@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow mt-10">
+
+  <h2 class="text-xl font-semibold mb-4">📦 Sales History</h2>
+
+  <table class="w-full text-sm border-collapse">
+    <thead class="bg-slate-100">
+      <tr>
+        <th class="p-2 text-left">Date</th>
+        <th class="p-2 text-left">Customer</th>
+        <th class="p-2 text-right">Total (₵)</th>
+        <th class="p-2 text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in sales %}
+      <tr class="border-b">
+        <td class="p-2">{{ sale.timestamp|date:"Y-m-d H:i" }}</td>
+        <td class="p-2">{{ sale.customer_name|default:"Walk-in" }}</td>
+        <td class="p-2 text-right">{{ sale.total_amount }}</td>
+        <td class="p-2 text-center">
+          <a href="{% url 'sale_receipt' sale.id %}"
+             class="px-3 py-1 bg-green-600 text-white rounded text-xs">
+            🧾 Receipt
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+{% endblock %}
+
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<a href="{% url 'receipt_view' sale.id %}" target="_blank"
+   class="px-3 py-1 bg-green-600 text-white rounded text-sm">
+   🧾 Print Receipt
+</a>
+
+{% endblock %} {% endcomment %}

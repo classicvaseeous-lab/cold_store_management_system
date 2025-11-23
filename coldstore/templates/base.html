@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}ColdStore — Dashboard{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sidebar-scroll { height: calc(100vh - 4rem); overflow: auto; }
+  </style>
+{% comment %} general CSS snippet you can paste in your base.html inside a <style> tag in the <head> section. It will give you consistent cards, buttons, and form controls across all your templates. {% endcomment %}
+  <!-- Add this inside <head> in base.html -->
+<style>
+  /* General Card Styling */
+  .card {
+    background-color: #ffffff;        /* Light mode background */
+    border-radius: 0.5rem;            /* Rounded corners */
+    padding: 1rem;                     /* Inner spacing */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Soft shadow */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+  .dark .card {
+    background-color: #1e293b;        /* Dark mode background */
+    color: #e2e8f0;                   /* Light text */
+  }
+
+  /* Primary Button */
+  .btn-primary {
+    background-color: #2563eb; /* Blue */
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    text-align: center;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+  }
+  .btn-primary:hover {
+    background-color: #1d4ed8;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    background-color: #f3f4f6;
+    color: #111827;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    font-weight: 500;
+    text-align: center;
+    display: inline-block;
+  }
+  .btn-secondary:hover {
+    background-color: #e5e7eb;
+  }
+
+  /* Form Controls */
+  .form-control {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+  }
+  .dark .form-control {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #334155;
+  }
+
+  /* Utility for spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+</style>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-inter transition-colors duration-300">
+{% comment %} for product success messages error handling {% endcomment %}
+  {% if messages %}
+<div class="fixed top-4 right-4 z-50 space-y-2">
+  {% for message in messages %}
+    <div class="px-4 py-2 rounded shadow text-white
+      {% if message.tags == 'success' %} bg-green-600
+      {% elif message.tags == 'error' %} bg-red-600
+      {% else %} bg-slate-700 {% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('[id^="msg"]').forEach(el => el.remove());
+  }, 3000);
+</script>
+{% endif %}
+{% comment %} for product success messages error handling {% endcomment %}
+<div class="min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-72 bg-white dark:bg-slate-900 border-r hidden md:block">
+    <div class="p-4 border-b dark:border-slate-700">
+      <a href="{% url 'inventory_dashboard' %}" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-600 text-white rounded flex items-center justify-center font-bold">CS</div>
+        <div>
+          <div class="text-lg font-semibold text-slate-800 dark:text-slate-100">ColdStore</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Inventory & Sales</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="p-4 sidebar-scroll">
+      <ul class="space-y-1">
+        <li><a href="{% url 'inventory_dashboard' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Dashboard</a></li>
+        <li><a href="{% url 'product_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Products</a></li> 
+        {% comment %} <li><a href="{% url 'product_add' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Add Product</a></li> commented out so that staff can't add their own choice product{% endcomment %}
+        <li><a href="{% url 'stock_in' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Stock In</a></li>
+        <li><a href="{% url 'stock_out' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Stock Out</a></li>
+        <li><a href="{% url 'create_sale' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">New Sale</a></li>
+        <li class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">Sales</li>
+        <li>
+        <a href="{% url 'sale_list' %}"
+        class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">
+        Sales Records
+        </a>
+        </li>
+        <li><a href="{% url 'add_expense' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Add Expense</a></li>
+        {% comment %} <li><a href="{% url 'reports_summary' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Reports</a></li> to prevent users from seeing it{% endcomment %}
+        {% comment %} <li><a href="{% url 'analytics_dashboard' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-700">Analytics</a></li> {% endcomment %}
+
+      </ul>
+    </nav>
+
+    <div class="p-4 border-t dark:border-slate-700">
+      <div class="text-xs text-slate-500 dark:text-slate-400">Logged in as</div>
+      <div class="mt-2 font-medium text-slate-800 dark:text-slate-100">{{ request.user.get_full_name|default:request.user.username }}</div>
+      <form method="post" action="{% url 'users:logout' %}">
+    {% csrf_token %}
+      <button class="text-sm text-red-600 hover:underline">Logout</button>
+      </form>
+
+      {% comment %} <div class="mt-2"><a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:underline">Logout</a></div> {% endcomment %}
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex-1">
+
+    <!-- Topbar for small screens -->
+    <header class="md:hidden bg-white dark:bg-slate-900 border-b dark:border-slate-700 p-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="mobileMenuBtn" class="p-2 rounded bg-slate-100 dark:bg-slate-800">☰</button>
+        <a href="{% url 'inventory_dashboard' %}" class="font-semibold text-slate-800 dark:text-slate-100">ColdStore</a>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Dark mode toggle -->
+        <button id="darkModeToggle" class="p-2 rounded bg-slate-200 dark:bg-slate-700 text-sm">🌓</button>
+        <a href="{% url 'users:dashboard' %}" class="text-sm text-slate-800 dark:text-slate-100">Profile</a>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="p-6">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script>
+  // mobile menu toggle
+  const btn = document.getElementById('mobileMenuBtn');
+  if(btn){
+    btn.addEventListener('click', ()=>{
+      const aside = document.querySelector('aside');
+      aside.classList.toggle('hidden');
+    });
+  }
+
+  // dark mode toggle
+  const toggle = document.getElementById('darkModeToggle');
+  const htmlEl = document.documentElement;
+  if(localStorage.getItem('theme') === 'dark') htmlEl.classList.add('dark');
+  
+  toggle.addEventListener('click', ()=>{
+    htmlEl.classList.toggle('dark');
+    if(htmlEl.classList.contains('dark')){
+      localStorage.setItem('theme', 'dark');
+    } else {
+      localStorage.setItem('theme', 'light');
+    }
+  });
+</script>
+
+<!-- Toast notifications -->
+{% if messages %}
+<div id="toast-container" class="fixed top-4 right-4 space-y-2 z-50">
+  {% for message in messages %}
+    <div class="px-4 py-3 rounded-lg shadow text-white 
+      {% if message.tags == 'success' %}bg-green-500
+      {% elif message.tags == 'error' %}bg-red-500
+      {% else %}bg-blue-500{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+<script>
+setTimeout(() => {
+  const container = document.getElementById('toast-container');
+  if (container) container.style.display = 'none';
+}, 3000);
+</script>
+{% endif %}
+</body>
+</html>
+
+{% comment %} <!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Cold Store Management</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+  <header>
+    <h1>ColdStore</h1>
+    <nav>
+      <a href="{% url 'inventory_dashboard' %}">Dashboard</a> |
+      <a href="{% url 'product_list' %}">Products</a> |
+      <a href="{% url 'create_sale' %}">New Sale</a> |
+      <a href="{% url 'add_expense' %}">Add Expense</a> |
+      <a href="{% url 'reports_summary' %}">Reports</a> |
+      {% if user.is_authenticated %}<a href="{% url 'logout' %}">Logout</a>{% else %}<a href="{% url 'login' %}">Login</a>{% endif %}
+    </nav>
+  </header>
+  <main>
+    {% if messages %}{% for m in messages %}<div class="msg">{{ m }}</div>{% endfor %}{% endif %}
+     
+  </main>
+</body>
+</html> {% endcomment %}

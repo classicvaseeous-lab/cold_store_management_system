@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load form_filters %}
+{% block title %}Sign in — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-12">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+    <h3 class="text-xl font-semibold mb-6 text-slate-800 dark:text-gray-100">Sign in</h3>
+
+    <!-- Error Messages -->
+    {% if form.errors %}
+    <div class="bg-rose-50 dark:bg-rose-900 border border-rose-100 dark:border-rose-700 p-3 rounded mb-4 text-rose-700 dark:text-rose-200">
+      <strong>Login failed:</strong>
+      <ul class="mt-2 list-disc list-inside text-sm">
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" novalidate class="space-y-5">
+      {% csrf_token %}
+
+      <!-- Username -->
+      <div class="relative w-full">
+        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400">
+          <!-- User icon (FontAwesome or Heroicons style) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </span>
+        {{ form.username|add_class:"peer pl-10 w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-700 text-slate-900 dark:text-gray-100 p-3 placeholder-transparent focus:ring-2 focus:ring-blue-500" }}
+        <label class="absolute left-10 top-3 text-gray-500 dark:text-gray-400 text-sm transition-all duration-200
+          peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500">
+          Username
+        </label>
+      </div>
+
+      <!-- Password -->
+      <div class="relative w-full">
+        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400">
+          <!-- Lock icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.104 0 2-.896 2-2V7a4 4 0 10-8 0v2c0 1.104.896 2 2 2zm0 0v2m0 4v2" />
+          </svg>
+        </span>
+        {{ form.password|add_class:"peer pl-10 pr-10 w-full rounded-lg border border-slate-300 dark:border-gray-600 dark:bg-gray-700 text-slate-900 dark:text-gray-100 p-3 placeholder-transparent focus:ring-2 focus:ring-blue-500" }}
+        <label class="absolute left-10 top-3 text-gray-500 dark:text-gray-400 text-sm transition-all duration-200
+          peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500">
+          Password
+        </label>
+
+        <!-- Show/hide toggle -->
+        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 focus:outline-none">
+          <!-- Eye icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="eyeIcon">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+      </div>
+
+      <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+        Sign in
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Toggle Password Script -->
+<script>
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  togglePassword.addEventListener('click', function () {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+  });
+</script>
+{% endblock %}
+
+
+
+{% comment %} {# templates/users/login.html #}
+{% extends 'base.html' %}
+{% block title %}Sign in — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-12">
+  <div class="bg-white p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold mb-4">Sign in</h3>
+
+    {% if form.errors %}
+      <div class="bg-rose-50 border border-rose-100 p-3 rounded mb-4 text-rose-700">
+        <strong>Login failed:</strong>
+        <ul class="mt-2">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="space-y-3">
+        {{ form.username.label_tag }}{{ form.username }}
+        {{ form.password.label_tag }}{{ form.password }}
+      </div>
+
+      <div class="mt-4">
+        <button class="w-full px-4 py-2 bg-blue-600 text-white rounded">Sign in</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% endcomment %}

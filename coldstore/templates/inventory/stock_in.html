@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow">
+  <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">📦 Receive Stock</h2>
+  
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+
+    <!-- Product -->
+    <div>
+      <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Product</label>
+      <select name="product" 
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 
+                     p-2 focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-100">
+        {% for p in form.fields.product.queryset %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Quantity + Unit Price -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Quantity</label>
+        <input type="number" name="quantity"
+               class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 
+                      p-2 focus:ring-2 focus:ring-blue-500
+                      text-slate-900 dark:text-slate-100
+                      placeholder-slate-400 dark:placeholder-slate-500">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Unit Price (₵)</label>
+        <input type="number" name="unit_price" step="0.01"
+               class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 
+                      p-2 focus:ring-2 focus:ring-blue-500
+                      text-slate-900 dark:text-slate-100
+                      placeholder-slate-400 dark:placeholder-slate-500">
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div>
+      <label class="block text-sm font-medium dark:text-slate-300 mb-1">Notes</label>
+      <textarea name="note" rows="3"
+                class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 
+                       p-2 focus:ring-2 focus:ring-blue-500
+                       text-slate-900 dark:text-slate-100
+                       placeholder-slate-400 dark:placeholder-slate-500"></textarea>
+    </div>
+
+    <!-- Submit -->
+    <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+      Receive
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+
+
+
+{% comment %} {% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow">
+  <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">📦 Receive Stock</h2>
+  
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    
+    <div>
+      <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Product</label>
+      <select name="product" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 p-2 focus:ring-2 focus:ring-blue-500">
+        {% for p in form.fields.product.queryset %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Quantity</label>
+        <input type="number" name="quantity" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 p-2 focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Unit Price (₵)</label>
+        <input type="number" name="unit_price" step="0.01" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 p-2 focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Notes</label>
+      <textarea name="note" rows="3" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 p-2 focus:ring-2 focus:ring-blue-500"></textarea>
+    </div>
+
+    <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">Receive</button>
+  </form>
+</div>
+{% endblock %} {% endcomment %}
+
+
+{% comment %} 
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+  <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
+    Stock In
+  </h2>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div class="flex justify-between">
+      <a href="{% url 'inventory_dashboard' %}" 
+         class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-400">
+         Cancel
+      </a>
+      <button type="submit" 
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+        Save
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %} {% endcomment %}
+
+
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+  <h2 class="text-lg font-medium mb-4">Receive stock</h2>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <div class="mt-4">
+      <button class="px-4 py-2 bg-blue-600 text-white rounded">Receive</button>
+    </div>
+  </form>
+</div>
+{% endblock %}   {% endcomment %}
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8 mt-10">
+  <h1 class="text-2xl font-semibold text-slate-700 dark:text-white mb-6">📦 Receive Stock</h1>
+
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {{ form.as_p }}
+    </div>
+    <div class="flex justify-end gap-4">
+      <a href="{% url 'inventory_dashboard' %}" class="px-5 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition">Cancel</a>
+      <button type="submit" class="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-md transition">Receive</button>
+    </div>
+  </form>
+</div>
+{% endblock %} {% endcomment %}
+ 
+
+Nneka3005$$

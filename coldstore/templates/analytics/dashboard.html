@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Analytics Dashboard — ColdStore{% endblock %}
+{% block content %}
+<div class="p-6 max-w-6xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold">📊 Analytics Dashboard</h2>
+    <a href="{% url 'inventory_dashboard' %}" class="text-sm text-slate-600 dark:text-slate-300 hover:underline">Back to Inventory</a>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card bg-white dark:bg-slate-800 p-4">
+      <h4 class="text-sm text-slate-500 dark:text-slate-400">Total Sales</h4>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400">₵{{ total_sales|floatformat:2 }}</p>
+    </div>
+    <div class="card bg-white dark:bg-slate-800 p-4">
+      <h4 class="text-sm text-slate-500 dark:text-slate-400">Total Expenses</h4>
+      <p class="text-2xl font-bold text-red-600 dark:text-red-400">₵{{ total_expenses|floatformat:2 }}</p>
+    </div>
+    <div class="card bg-white dark:bg-slate-800 p-4">
+      <h4 class="text-sm text-slate-500 dark:text-slate-400">Net Profit</h4>
+      <p class="text-2xl font-bold {% if total_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+        ₵{{ total_profit|floatformat:2 }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card bg-white dark:bg-slate-800 p-4">
+      <h4 class="text-sm font-semibold mb-3">Sales vs Expenses</h4>
+      <canvas id="salesChart" height="150"></canvas>
+    </div>
+
+    <div class="card bg-white dark:bg-slate-800 p-4">
+      <h4 class="text-sm font-semibold mb-3">Profit Trend</h4>
+      <canvas id="profitChart" height="150"></canvas>
+    </div>
+  </div>
+
+  <!-- Top Products Table -->
+  <div class="card bg-white dark:bg-slate-800 p-4 overflow-x-auto">
+    <h4 class="text-sm font-semibold mb-3 dark:text-slate-100">Top 5 Products (by stock quantity)</h4>
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-700">
+        <tr>
+          <th class="p-2 text-left text-xs text-slate-500 dark:text-slate-100">Product</th>
+          <th class="p-2 text-right text-xs text-slate-500 dark:text-slate-100">Qty</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-600">
+        {% for p in top_products %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
+          <td class="p-2 dark:text-slate-100">{{ p.name }}</td>
+          <td class="p-2 text-right dark:text-slate-100">{{ p.quantity }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2" class="p-4 text-center text-slate-500 dark:text-slate-400">No products yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const labels = {{ dates|safe }};
+  const salesData = {{ sales_data|safe }};
+  const expenseData = {{ expense_data|safe }};
+  const profitData = {{ profit_data|safe }};
+
+  // Sales vs Expenses
+  new Chart(document.getElementById('salesChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Sales (₵)', data: salesData, backgroundColor: 'rgba(34,197,94,0.7)' },
+        { label: 'Expenses (₵)', data: expenseData, backgroundColor: 'rgba(239,68,68,0.7)' }
+      ]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Profit Line Chart
+  new Chart(document.getElementById('profitChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Profit (₵)',
+        data: profitData,
+        borderColor: 'rgba(59,130,246,0.8)',
+        backgroundColor: 'rgba(59,130,246,0.2)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+</script>
+{% endblock %}
+
+
+
+{% comment %} {% extends 'base.html' %}
+{% block title %}Analytics Dashboard — ColdStore{% endblock %}
+{% block content %}
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-semibold">📊 Analytics Dashboard</h2>
+    <a href="{% url 'inventory_dashboard' %}" class="text-sm text-slate-600 hover:underline">Back to Inventory</a>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <h4 class="text-sm text-slate-500">Total Sales</h4>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400">₵{{ total_sales|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <h4 class="text-sm text-slate-500">Total Expenses</h4>
+      <p class="text-2xl font-bold text-red-600 dark:text-red-400">₵{{ total_expenses|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <h4 class="text-sm text-slate-500">Net Profit</h4>
+      <p class="text-2xl font-bold {% if total_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-red-600{% endif %}">
+        ₵{{ total_profit|floatformat:2 }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <h4 class="text-sm font-semibold mb-3">Sales vs Expenses</h4>
+      <canvas id="salesChart" height="150"></canvas>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+      <h4 class="text-sm font-semibold mb-3">Profit Trend</h4>
+      <canvas id="profitChart" height="150"></canvas>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+    <h4 class="text-sm font-semibold mb-3">Top 5 Products (by stock quantity)</h4>
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-700">
+        <tr>
+          <th class="p-2 text-left text-xs text-slate-500 dark:text-slate-300">Product</th>
+          <th class="p-2 text-right text-xs text-slate-500 dark:text-slate-300">Qty</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-600">
+        {% for p in top_products %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
+          <td class="p-2">{{ p.name }}</td>
+          <td class="p-2 text-right">{{ p.quantity }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2" class="p-4 text-center text-slate-500">No products yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const labels = {{ dates|safe }};
+  const salesData = {{ sales_data|safe }};
+  const expenseData = {{ expense_data|safe }};
+  const profitData = {{ profit_data|safe }};
+
+  // Sales vs Expenses
+  new Chart(document.getElementById('salesChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Sales (₵)',
+          data: salesData,
+          backgroundColor: 'rgba(34,197,94,0.7)',
+        },
+        {
+          label: 'Expenses (₵)',
+          data: expenseData,
+          backgroundColor: 'rgba(239,68,68,0.7)',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  // Profit Line Chart
+  new Chart(document.getElementById('profitChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Profit (₵)',
+        data: profitData,
+        borderColor: 'rgba(59,130,246,0.8)',
+        backgroundColor: 'rgba(59,130,246,0.2)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+{% endblock %} {% endcomment %}

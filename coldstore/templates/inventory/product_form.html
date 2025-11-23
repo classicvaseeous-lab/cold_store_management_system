@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+  <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-100 mb-6">
+    {{ form.instance.pk|yesno:"Edit Product,Add New Product" }}
+  </h2>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div class="relative w-full">
+        {% if field.field.widget.input_type == "textarea" %}
+          <textarea 
+            name="{{ field.name }}" 
+            rows="3"
+            placeholder=" " 
+            class="peer w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-black dark:text-white p-4 pt-6 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ field.value }}</textarea>
+          <label class="absolute left-4 top-3 text-gray-500 dark:text-gray-400 text-sm transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500">
+            {{ field.label }}
+          </label>
+
+        {% elif field.field.widget.input_type == "select" %}
+          <select 
+            name="{{ field.name }}" 
+            class="peer w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-black dark:text-white p-4 pt-6 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+            style="color: black;" 
+            onfocus="this.style.color='black'" 
+            onchange="this.style.color='black'">
+            <option value="" disabled selected hidden></option>
+            {% for choice in field.field.choices %}
+              <option value="{{ choice.0 }}" class="dark:text-white" {% if field.value == choice.0 %}selected{% endif %}>
+                {{ choice.1 }}
+              </option>
+            {% endfor %}
+          </select>
+          <label class="absolute left-4 top-3 text-gray-500 dark:text-gray-400 text-sm transition-all duration-200 peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500">
+            {{ field.label }}
+          </label>
+
+        {% else %}
+          <input 
+            type="{{ field.field.widget.input_type }}" 
+            name="{{ field.name }}" 
+            value="{{ field.value|default_if_none:'' }}"
+            placeholder=" "
+            class="peer w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-black dark:text-white p-4 pt-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="absolute left-4 top-3 text-gray-500 dark:text-gray-400 text-sm transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500">
+            {{ field.label }}
+          </label>
+        {% endif %}
+
+        {% if field.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ field.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <!-- Buttons -->
+    <div class="flex justify-between mt-6">
+      <a href="{% url 'product_list' %}" 
+         class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-400">
+         Cancel
+      </a>
+      <button type="submit" 
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">
+        Save Product
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% comment %} {% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow">
+  <h2 class="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">
+    🧃 {% if form.instance.pk %}Edit Product{% else %}Add Product{% endif %}
+  </h2>
+
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    
+    <div>
+      <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Name</label>
+      {{ form.name }}
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Category</label>
+      {{ form.category }}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Quantity</label>
+        {{ form.quantity }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Min Alert Qty</label>
+        {{ form.min_quantity_alert }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Unit Price (₵)</label>
+        {{ form.unit_price }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Wholesale Price (₵)</label>
+        {{ form.wholesale_price }}
+      </div>
+    </div>
+
+    <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+      💾 Save Product
+    </button>
+  </form>
+</div>
+
+<style>
+  input, select, textarea {
+    @apply w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 p-2 focus:ring-2 focus:ring-blue-500;
+  }
+</style>
+{% endblock %}
+ {% endcomment %}
+
+ 
+
+
+
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+  <h2 class="text-xl font-semibold mb-4">Add product</h2>
+  <form method="post">{% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {{ form.as_p }}
+    </div>
+    <div class="mt-4">
+      <button class="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+      <a href="{% url 'product_list' %}" class="ml-2 text-sm text-slate-600">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %} {% endcomment %}

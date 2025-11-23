@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% block title %}Products — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 space-y-6">
+
+  <!-- Header / Search & Filters -->
+  <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow mb-6 border border-slate-200 dark:border-slate-800">
+  {% comment %} <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"> {% endcomment %}
+    <div>
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">🧊 Products</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Manage inventory, edit details, or add stock.</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      
+      <form method="get" class="flex items-center gap-2" id="productFilters">
+        <input
+          name="q"
+          value="{{ current_q }}"
+          type="search"
+          placeholder="Search by name, SKU or category..."
+          class="w-64 form-control"
+        />
+
+        <select name="filter" class="form-control">
+          <option value="">All</option>
+          <option value="low" {% if current_filter == 'low' %}selected{% endif %}>Low stock</option>
+          <option value="high" {% if current_filter == 'high' %}selected{% endif %}>High stock</option>
+        </select>
+
+        <select name="category" class="form-control">
+          <option value="">All categories</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if c.id|stringformat:"s" == current_category %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+
+        <input type="number" name="min_price" step="0.01" placeholder="Min ₵" value="{{ min_price }}" class="form-control w-24" />
+        <input type="number" name="max_price" step="0.01" placeholder="Max ₵" value="{{ max_price }}" class="form-control w-24" />
+
+        <select name="sort" class="form-control">
+          <option value="">Sort</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price low→high</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price high→low</option>
+        </select>
+
+        <button type="submit" class="btn-primary">Apply</button>
+        <a href="{% url 'product_list' %}" class="btn-secondary">Reset</a>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  {% comment %} <div class="card overflow-x-auto">
+    <div class="flex items-center justify-between mb-4">
+      <div></div>
+      <a href="{% url 'product_add' %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">+ Add Product</a>
+    </div>
+
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs uppercase">
+        <tr>
+          <th class="p-3 text-left">Product</th>
+          <th class="p-3 text-left">SKU</th>
+          <th class="p-3 text-right">Qty</th>
+          <th class="p-3 text-right">Price</th>
+          <th class="p-3 text-center">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for p in products %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+            <td class="p-3 flex items-center gap-3">
+              {% if p.image %}
+                <img src="{{ p.image.url }}" alt="{{ p.name }}" class="w-12 h-12 object-cover rounded"/>
+              {% else %}
+                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded flex items-center justify-center text-slate-500">📦</div>
+              {% endif %}
+            <div>
+              <div class="font-medium text-slate-800 dark:text-slate-100">{{ p.name }}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-300">
+                {% if p.category %}
+                {{ p.category.name }}
+                {% else %}
+                —
+                {% endif %}
+              </div>
+                {% if p.quantity <= p.min_quantity_alert %}
+                <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-100 bg-amber-200 dark:bg-amber-600 rounded-full">
+                  ⚠️ Low
+                </span>
+                {% endif %}
+            </div>
+
+            </td>
+
+            <td class="p-3 text-slate-600 dark:text-slate-300">{{ p.sku|default:"—" }}</td>
+            <td class="p-3 text-right text-slate-800 dark:text-slate-100">{{ p.quantity }}</td>
+            <td class="p-3 text-right text-slate-800 dark:text-slate-100">₵{{ p.unit_price|floatformat:2 }}</td>
+
+            <td class="p-3 text-center">
+              <div class="inline-flex items-center gap-2">
+                <a href="{% url 'product_edit' p.pk %}" class="text-indigo-600 hover:underline">Edit</a>
+                <!-- Delete button triggers modal -->
+                <button data-product-id="{{ p.pk }}" data-product-name="{{ p.name }}" class="delete-btn px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Delete</button>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="p-6 text-center text-slate-500 dark:text-slate-400">No products found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-slate-600 dark:text-slate-400">
+        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+      </div>
+      <nav class="flex items-center gap-1">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border">« First</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border">‹ Prev</a>
+        {% endif %}
+
+        <span class="px-3 py-1">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border">Next ›</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border">Last »</a>
+        {% endif %}
+      </nav>
+    </div>
+  </div> {% endcomment %}
+
+  <div class="bg-slate-900 dark:bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 overflow-x-auto">
+    <div class="flex items-center justify-between mb-4">
+      <div></div>
+      <a href="{% url 'product_add' %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">+ Add Product</a>
+    </div>
+
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-800 text-slate-300 text-xs uppercase">
+        <tr>
+          <th class="p-3 text-left">Product</th>
+          <th class="p-3 text-left">SKU</th>
+          <th class="p-3 text-right">Qty</th>
+          <th class="p-3 text-right">Price</th>
+          <th class="p-3 text-center">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-slate-800">
+        {% for p in products %}
+          <tr class="transition hover:bg-slate-800/40 dark:hover:bg-slate-700/40">
+            <td class="p-3 flex items-center gap-3">
+              {% if p.image %}
+                <img src="{{ p.image.url }}" alt="{{ p.name }}" class="w-12 h-12 object-cover rounded"/>
+              {% else %}
+                <div class="w-12 h-12 bg-slate-700 rounded flex items-center justify-center text-slate-400">📦</div>
+              {% endif %}
+
+              <div>
+                <div class="font-medium text-slate-100">{{ p.name }}</div>
+                <div class="text-xs text-slate-400">
+                  {% if p.category %}
+                    {{ p.category.name }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+
+                {% if p.quantity <= p.min_quantity_alert %}
+                <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold text-amber-100 bg-amber-600 rounded-full">
+                  ⚠️ Low
+                </span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="p-3 text-slate-300">{{ p.sku|default:"—" }}</td>
+            <td class="p-3 text-right text-slate-100">{{ p.quantity }}</td>
+            <td class="p-3 text-right text-slate-100">₵{{ p.unit_price|floatformat:2 }}</td>
+
+            <td class="p-3 text-center">
+              <div class="inline-flex items-center gap-2">
+                <a href="{% url 'product_edit' p.pk %}" class="text-indigo-400 hover:underline">Edit</a>
+                <button data-product-id="{{ p.pk }}" data-product-name="{{ p.name }}" class="delete-btn px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Delete</button>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="p-6 text-center text-slate-400">No products found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="mt-4 flex items-center justify-between text-slate-400">
+      <div class="text-sm">
+        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+      </div>
+      <nav class="flex items-center gap-1">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border border-slate-700">« First</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border border-slate-700">‹ Prev</a>
+        {% endif %}
+
+        <span class="px-3 py-1">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border border-slate-700">Next ›</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if query_string %}&{{ query_string }}{% endif %}" class="px-3 py-1 rounded border border-slate-700">Last »</a>
+        {% endif %}
+      </nav>
+    </div>
+</div>
+  
+</div>
+
+<!-- Delete confirmation modal (simple) -->
+<div id="deleteModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full">
+    <h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-100">Delete Product</h3>
+    <p class="text-sm text-slate-600 dark:text-slate-300 mb-4" id="deleteMessage">Are you sure?</p>
+    <form id="deleteForm" method="post" action="">
+      {% csrf_token %}
+      <div class="flex justify-end gap-3">
+        <button type="button" id="cancelDelete" class="btn-secondary">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const deleteModal = document.getElementById('deleteModal');
+  const deleteMessage = document.getElementById('deleteMessage');
+  const deleteForm = document.getElementById('deleteForm');
+
+  let activeRow = null; // store the row that will be removed
+
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.productId;
+      const name = btn.dataset.productName;
+      activeRow = btn.closest('tr');   // store table row
+
+      deleteMessage.textContent = `Delete "${name}"?`;
+      deleteForm.dataset.id = id;
+
+      deleteModal.classList.remove('hidden');
+      deleteModal.classList.add('flex');
+    });
+  });
+
+  // Submit delete (AJAX)
+  deleteForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const id = this.dataset.id;
+
+    fetch(`/product/delete/${id}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+        // remove row
+        activeRow.remove();
+
+        // show message
+        showToast("Product deleted!", "success");
+      }
+      deleteModal.classList.add('hidden');
+    });
+  });
+
+  document.getElementById('cancelDelete').addEventListener('click', () => {
+    deleteModal.classList.add('hidden');
+  });
+
+  // Toast
+  function showToast(msg, type="success") {
+    let div = document.createElement("div");
+    div.className = `px-4 py-2 rounded shadow text-white fixed top-4 right-4 bg-${type === "success" ? "green" : "red"}-600`;
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(()=> div.remove(), 3000)
+  }
+});
+</script>
+
+{% endblock %}
+
+
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<div class="bg-white p-4 rounded-lg shadow-sm">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Products</h2>
+    <a href="{% url 'product_add' %}" class="px-3 py-2 bg-blue-600 text-white rounded">Add product</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="p-3 text-left">Name</th>
+          <th class="p-3 text-left">SKU</th>
+          <th class="p-3 text-right">Qty</th>
+          <th class="p-3 text-right">Price</th>
+          <th class="p-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr class="border-b hover:bg-slate-50">
+          <td class="p-3">{{ p.name }}</td>
+          <td class="p-3">{{ p.sku }}</td>
+          <td class="p-3 text-right">{{ p.quantity }}</td>
+          <td class="p-3 text-right">₵{{ p.unit_price }}</td>
+          <td class="p-3 text-center"><a href="#" class="text-blue-600">Edit</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="p-4 text-center text-slate-500">No products yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+ {% endcomment %}

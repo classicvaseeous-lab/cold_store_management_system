@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — ColdStore{% endblock %}
+{% block content %}
+<div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md max-w-4xl mx-auto mt-10">
+  <!-- Welcome Header -->
+  <h1 class="text-2xl font-semibold mb-2 text-slate-800 dark:text-gray-100">
+    Welcome, {{ request.user.get_full_name|default:request.user.username }} 👋
+  </h1>
+  <p class="text-sm text-slate-600 dark:text-gray-300 mb-6">
+    Role: 
+    {% for g in request.user.groups.all %}
+      {{ g.name }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+      None
+    {% endfor %}
+  </p>
+
+  <!-- Quick Links Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Inventory Dashboard Card -->
+    <div class="p-4 bg-slate-50 dark:bg-gray-700 rounded-lg shadow hover:shadow-lg transition">
+      <div class="text-xs text-slate-400 dark:text-gray-300 uppercase font-semibold">Quick Link</div>
+      <a href="{% url 'inventory_dashboard' %}" 
+         class="font-medium block mt-2 text-slate-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition">
+         Inventory Dashboard
+      </a>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="p-4 bg-slate-50 dark:bg-gray-700 rounded-lg shadow hover:shadow-lg transition">
+      <div class="text-xs text-slate-400 dark:text-gray-300 uppercase font-semibold">Profile</div>
+      <a href="{% url 'users:dashboard' %}" 
+         class="font-medium block mt-2 text-slate-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition">
+         View Profile
+      </a>
+    </div>
+
+    <!-- Reports Card -->
+    <div class="p-4 bg-slate-50 dark:bg-gray-700 rounded-lg shadow hover:shadow-lg transition">
+      <div class="text-xs text-slate-400 dark:text-gray-300 uppercase font-semibold">make sale</div>
+      <a href="{% url 'create_sale' %}" 
+         class="font-medium block mt-2 text-slate-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition">
+         Make Sale
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

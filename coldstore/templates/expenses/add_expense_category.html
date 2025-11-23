@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load form_filters %}
+
+{% block title %}Expense Categories — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+  
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-semibold text-slate-800 dark:text-gray-100">💰 Expense Categories</h2>
+    <a href="{% url 'add_expense_category' %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">
+      Add Category
+    </a>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto bg-white dark:bg-gray-700 rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-slate-100 dark:divide-gray-600 text-sm">
+      <thead class="bg-slate-50 dark:bg-gray-600">
+        <tr>
+          <th class="p-3 text-left text-xs font-medium text-slate-500 dark:text-gray-200">Name</th>
+          <th class="p-3 text-left text-xs font-medium text-slate-500 dark:text-gray-200">Description</th>
+          <th class="p-3 text-right text-xs font-medium text-slate-500 dark:text-gray-200">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-gray-600">
+        {% for c in categories %}
+        <tr class="hover:bg-slate-50 dark:hover:bg-gray-600 transition">
+          <td class="p-3 text-slate-800 dark:text-gray-100">{{ c.name }}</td>
+          <td class="p-3 text-slate-700 dark:text-gray-300">{{ c.description|default:"—" }}</td>
+          <td class="p-3 text-right space-x-2">
+            <a href="{% url 'edit_expense_category' c.id %}" class="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs transition">Edit</a>
+            <a href="{% url 'delete_expense_category' c.id %}" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs transition" onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="p-4 text-center text-slate-500 dark:text-gray-300">No categories yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+{% comment %} {% extends 'base.html' %}
+{% block title %}Add Expense Category — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-8">
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">Add Expense Category</h2>
+      <a href="{% url 'expense_category_list' %}" class="btn-secondary text-sm">View all</a>
+    </div>
+
+    <form method="post" novalidate class="space-y-4">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div>
+        {{ form.name.label_tag }}
+        {{ form.name|add_class:"form-control" }}
+        {% if form.name.errors %}
+          <p class="text-rose-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        {{ form.description.label_tag }}
+        {{ form.description|add_class:"form-control" }}
+        {% if form.description.errors %}
+          <p class="text-rose-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button type="submit" class="btn-primary">Save Category</button>
+        <a href="{% url 'expense_category_list' %}" class="btn-secondary text-sm">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% endcomment %}
+
+
+
+{% comment %} {% extends 'base.html' %}
+{% block title %}Add Expense Category — ColdStore{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-8">
+  <div class="bg-white p-6 rounded-lg shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">Add Expense Category</h2>
+      <a href="{% url 'expense_category_list' %}" class="text-sm text-slate-600 hover:underline">View all</a>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="space-y-4">
+        <div>
+          {{ form.name.label_tag }}
+          {{ form.name }}
+          {% if form.name.errors %}
+            <p class="text-rose-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
+          {{ form.description.label_tag }}
+          {{ form.description }}
+          {% if form.description.errors %}
+            <p class="text-rose-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Save Category</button>
+        <a href="{% url 'expense_category_list' %}" class="text-sm text-slate-600 hover:underline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% endcomment %}
