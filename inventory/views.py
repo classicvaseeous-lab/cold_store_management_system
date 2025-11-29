@@ -14,8 +14,8 @@ from .forms import ProductForm, StockEntryForm, StockOutForm
 
 
 # 🧊 Dashboard (View-only for Admin, Staff, Accountant)
-@login_required
-@has_any_group("Admin", "Staff", "Accountant")
+# @login_required
+# @has_any_group("Admin", "Staff", "Accountant")
 def dashboard(request):
     products = Product.objects.all().order_by("category", "-quantity")
     low_stock = products.filter(quantity__lte=F('min_quantity_alert'))
@@ -137,8 +137,8 @@ class ProductListView(ListView):
 
 
 # 🧾 Add new product
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
 
@@ -183,8 +183,8 @@ def product_create(request):
 
 
 # 🧮 Stock In
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def stock_in(request):
     if request.method == "POST":
         form = StockEntryForm(request.POST)
@@ -202,8 +202,8 @@ def stock_in(request):
 
 
 # 📉 Stock Out
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def stock_out(request):
     if request.method == "POST":
         form = StockOutForm(request.POST)
@@ -221,8 +221,8 @@ def stock_out(request):
 
 
 # ✏️ Edit Product
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == "POST":
@@ -251,8 +251,8 @@ def product_edit(request, pk):
 
 
 # 📝 Edit Stock Entry
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def stock_entry_edit(request, pk):
     entry = get_object_or_404(StockEntry, pk=pk)
     if request.method == "POST":
@@ -271,8 +271,8 @@ def stock_entry_edit(request, pk):
 
 
 # 🧾 Edit Stock Out
-@login_required
-@has_any_group("Admin", "Staff")
+# @login_required
+# @has_any_group("Admin", "Staff")
 def stock_out_edit(request, pk):
     out = get_object_or_404(StockOut, pk=pk)
     if request.method == "POST":

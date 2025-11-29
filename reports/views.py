@@ -45,8 +45,8 @@ try:
 except Exception:
     XHTML2PDF_AVAILABLE = False
     
-@login_required
-@has_any_group("Admin","Accountant")
+# @login_required
+# @has_any_group("Admin","Accountant")
 def summary(request):
     # date filters
     start = request.GET.get("start")
@@ -77,7 +77,7 @@ def summary(request):
     }
     return render(request, "reports/summary.html", context)
 
-@login_required
+# @login_required
 def export_sales_csv(request):
     sales = Sale.objects.all().order_by("-timestamp")
     response = HttpResponse(content_type="text/csv")
@@ -89,7 +89,7 @@ def export_sales_csv(request):
     return response
 # added by frank for exporting expenses to csv
 # added by frank for exporting expenses to csv
-@login_required
+# @login_required
 def export_expenses_csv(request):
     expenses = Expense.objects.all().order_by("-timestamp")
     response = HttpResponse(content_type="text/csv")
@@ -133,8 +133,8 @@ def export_expenses_csv(request):
 #     }
 #     return render(request, "reports/summary.html", context)
 
-@login_required
-@has_any_group("Admin","Accountant")
+# @login_required
+# @has_any_group("Admin","Accountant")
 def export_sales_csv(request):
     sales = Sale.objects.all().order_by("-timestamp")
     response = HttpResponse(content_type="text/csv")
@@ -145,8 +145,8 @@ def export_sales_csv(request):
         writer.writerow([s.id, s.timestamp, s.created_by.username if s.created_by else "", s.total_amount])
     return response
 
-@login_required
-@has_any_group("Admin","Accountant")
+# @login_required
+# @has_any_group("Admin","Accountant")
 def export_sales_excel(request):
     if not OPENPYXL_AVAILABLE:
         return HttpResponse(
@@ -188,8 +188,8 @@ def export_sales_excel(request):
     response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
     return response
 
-@login_required
-@has_any_group("Admin","Accountant")
+# @login_required
+# @has_any_group("Admin","Accountant")
 
 
 def export_sales_pdf(request):
@@ -276,8 +276,8 @@ def export_sales_pdf(request):
 #     )
 
 # Chart data API for front-end Chart.js
-@login_required
-@has_any_group("Admin","Accountant")
+# @login_required
+# @has_any_group("Admin","Accountant")
 def chart_sales_vs_expenses(request):
     # last 30 days
     days = int(request.GET.get("days", 30))
