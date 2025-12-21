@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — ColdStore{% endblock %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div class="card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-semibold">⏱️ My Attendance</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
+        {{ employee.full_name }}
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      {% if is_clocked_in %}
+        <a href="{% url 'my_clock_out' %}" class="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white">
+          Clock Out
+        </a>
+      {% else %}
+        <a href="{% url 'my_clock_in' %}" class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white">
+          Clock In
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-800 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs uppercase">
+        <tr>
+          <th class="p-3 text-left">Clock In</th>
+          <th class="p-3 text-left">Clock Out</th>
+          <th class="p-3 text-right">Hours</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for l in logs %}
+        <tr>
+          <td class="p-3">{{ l.clock_in|date:"Y-m-d H:i" }}</td>
+          <td class="p-3">
+            {% if l.clock_out %}
+              {{ l.clock_out|date:"Y-m-d H:i" }}
+            {% else %}
+              <span class="text-amber-500 font-medium">Open</span>
+            {% endif %}
+          </td>
+          <td class="p-3 text-right">
+            {{ l.hours_worked|floatformat:2 }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="p-6 text-center text-slate-500 dark:text-slate-400">
+            No attendance records yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

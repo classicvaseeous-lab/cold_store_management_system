@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — ColdStore{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto card">
+  <h2 class="text-xl font-semibold mb-4">📝 {{ title }}</h2>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">User</label>
+        {{ form.user }}
+      </div>
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Full name</label>
+        {{ form.full_name }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Date of birth</label>
+        {{ form.date_of_birth }}
+      </div>
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Phone</label>
+        {{ form.phone }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Salary (₵)</label>
+        {{ form.salary }}
+      </div>
+      <div>
+        <label class="text-sm text-slate-600 dark:text-slate-300">SSNIT number</label>
+        {{ form.ssnit_number }}
+      </div>
+    </div>
+
+    <div>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Photo</label>
+      {{ form.photo }}
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <button class="btn-primary">Save</button>
+      <a href="{% url 'employees_list' %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Make all Django widgets match your form-control style
+  document.querySelectorAll("select, input, textarea").forEach(el => {
+    el.classList.add("form-control");
+  });
+</script>
+
+{% endblock %}

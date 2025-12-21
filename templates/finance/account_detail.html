@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load form_filters %}
+{% block title %}{{ account.name }} — Finance{% endblock %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">🏦 {{ account.name }}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Bank: <span class="font-medium">{{ account.bank_name|default:"—" }}</span> •
+          Acc No: <span class="font-medium">{{ account.account_number|default:"—" }}</span>
+        </p>
+        {% if account.notes %}
+          <p class="text-sm text-slate-600 dark:text-slate-300 mt-3">{{ account.notes }}</p>
+        {% endif %}
+      </div>
+
+      <div class="flex gap-2">
+        <a href="{% url 'finance:account_list' %}" class="btn-secondary">← Back</a>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Current Balance</div>
+        <div class="text-xl font-semibold text-slate-800 dark:text-slate-100">₵{{ current_balance|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Total Credits</div>
+        <div class="text-xl font-semibold text-green-600">₵{{ total_credits|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Total Debits</div>
+        <div class="text-xl font-semibold text-red-600">₵{{ total_debits|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">This Month Net</div>
+        <div class="text-xl font-semibold text-slate-800 dark:text-slate-100">₵{{ month_net|floatformat:2 }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Credits ₵{{ month_credits|floatformat:2 }} • Debits ₵{{ month_debits|floatformat:2 }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Transaction -->
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100">➕ Add Bank Transaction</h3>
+
+    <form method="post" action="{% url 'finance:tx_add' account.id %}" class="mt-5 space-y-4">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Type</label>
+          {{ tx_form.tx_type|add_class:"form-control" }}
+        </div>
+        <div>
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Date</label>
+          {{ tx_form.date|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Title</label>
+          {{ tx_form.title|add_class:"form-control" }}
+        </div>
+        <div>
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Amount (₵)</label>
+          {{ tx_form.amount|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Reference (optional)</label>
+          {{ tx_form.reference|add_class:"form-control" }}
+        </div>
+        <div>
+          <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Notes (optional)</label>
+          {{ tx_form.notes|add_class:"form-control" }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary w-full sm:w-auto">Save Transaction</button>
+    </form>
+  </div>
+
+  <!-- Transactions -->
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100">📒 Transactions ({{ y }}/{{ m }})</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Filtered by month.</p>
+      </div>
+
+      <form method="get" class="flex gap-2">
+        <input type="number" name="y" value="{{ y }}" class="form-control w-28" />
+        <input type="number" name="m" value="{{ m }}" class="form-control w-20" />
+        <button class="btn-secondary">Go</button>
+      </form>
+    </div>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs uppercase">
+          <tr>
+            <th class="p-3 text-left">Date</th>
+            <th class="p-3 text-left">Type</th>
+            <th class="p-3 text-left">Title</th>
+            <th class="p-3 text-right">Amount</th>
+            <th class="p-3 text-right">Action</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for t in transactions %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+            <td class="p-3 text-slate-700 dark:text-slate-200">{{ t.date }}</td>
+            <td class="p-3">
+              {% if t.tx_type == "credit" %}
+                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Credit</span>
+              {% else %}
+                <span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">Debit</span>
+              {% endif %}
+            </td>
+            <td class="p-3 text-slate-800 dark:text-slate-100">
+              <div class="font-medium">{{ t.title }}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">
+                {% if t.reference %}Ref: {{ t.reference }}{% endif %}
+                {% if t.notes %} • {{ t.notes }}{% endif %}
+              </div>
+            </td>
+            <td class="p-3 text-right font-semibold">
+              {% if t.tx_type == "credit" %}
+                <span class="text-green-600">₵{{ t.amount|floatformat:2 }}</span>
+              {% else %}
+                <span class="text-red-600">₵{{ t.amount|floatformat:2 }}</span>
+              {% endif %}
+            </td>
+            <td class="p-3 text-right">
+              <form method="post" action="{% url 'finance:tx_delete' t.id %}" onsubmit="return confirm('Delete this transaction?');">
+                {% csrf_token %}
+                <button class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 text-xs">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="p-6 text-center text-slate-500 dark:text-slate-400">
+              No transactions for this month.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

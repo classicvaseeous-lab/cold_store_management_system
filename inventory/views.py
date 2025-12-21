@@ -291,6 +291,37 @@ def stock_out_edit(request, pk):
 
 
 
+@login_required
+@has_any_group("Admin")
+def retail_price_list(request):
+    """
+    Admin-only view:
+    Shows retail prices (unit_price).
+    """
+    products = Product.objects.select_related("category").order_by("category__name", "name")
+
+    context = {
+        "products": products,
+        "price_type": "Retail",
+    }
+    return render(request, "inventory/retail_price_list.html", context)
+
+
+@login_required
+@has_any_group("Admin")
+def wholesale_price_list(request):
+    """
+    Admin-only view:
+    Shows wholesale prices (wholesale_price).
+    """
+    products = Product.objects.select_related("category").order_by("category__name", "name")
+
+    context = {
+        "products": products,
+        "price_type": "Wholesale",
+    }
+    return render(request, "inventory/wholesale_price_list.html", context)
+
 
 
 """✅ What This Version Adds

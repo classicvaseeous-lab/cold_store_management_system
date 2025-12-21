@@ -12,6 +12,9 @@ urlpatterns = [
     path('stock/out/', views.stock_out, name='stock_out'),
     path('stock/in/<int:pk>/edit/', views.stock_entry_edit, name='stock_entry_edit'),
     path('stock/out/<int:pk>/edit/', views.stock_out_edit, name='stock_out_edit'),
+    path("prices/retail/", views.retail_price_list, name="retail_price_list"),
+    path("prices/wholesale/", views.wholesale_price_list, name="wholesale_price_list"),
+
 ]
 
 

@@ -1,13 +1,13 @@
-
+# sales/views.py
 from decimal import Decimal
-from django.shortcuts import render, redirect
+import json
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.forms import formset_factory
+from users.utils import has_any_group
 from .models import Sale, SaleItem
 from .forms import SaleForm, SaleItemForm
 from inventory.models import Product
-from django.forms import formset_factory
-from users.utils import has_any_group
-from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A5, landscape
 from reportlab.pdfgen import canvas
@@ -22,6 +22,128 @@ import qrcode
 import base64
 
 
+VAT_RATE = Decimal("0.15")
+
+def user_sale_type(user):
+    # Admin can do anything, but for now we choose:
+    # Retail group => retail, Wholesale group => wholesale, else retail
+    if user.groups.filter(name="Wholesale").exists():
+        return "wholesale"
+    if user.groups.filter(name="Retail").exists():
+        return "retail"
+    return "retail"
+
+@login_required
+@has_any_group("Admin", "Staff", "Retail", "Wholesale")
+def create_sale(request):
+    ItemFormset = formset_factory(SaleItemForm, extra=1)
+
+    stype = user_sale_type(request.user)
+
+    # ✅ pick correct price list for the logged-in user
+    products = Product.objects.all()
+    if stype == "wholesale":
+        prices_json = {p.id: float(p.wholesale_price) for p in products}
+    else:
+        prices_json = {p.id: float(p.unit_price) for p in products}
+
+    if request.method == "POST":
+        sale_form = SaleForm(request.POST)
+        formset = ItemFormset(request.POST)
+
+        if sale_form.is_valid() and formset.is_valid():
+            sale = sale_form.save(commit=False)
+            sale.created_by = request.user
+            sale.sale_type = stype
+            sale.save()
+
+            subtotal = Decimal("0.00")
+
+            for f in formset:
+                if f.cleaned_data and f.cleaned_data.get("product"):
+                    item = f.save(commit=False)
+                    item.sale = sale
+
+                    # ✅ FORCE correct unit price from product (don’t trust posted value)
+                    if sale.sale_type == "wholesale":
+                        item.unit_price = item.product.wholesale_price
+                    else:
+                        item.unit_price = item.product.unit_price
+
+                    item.save()
+                    subtotal += item.line_total()
+
+            discount = sale_form.cleaned_data.get("discount") or Decimal("0.00")
+            subtotal_after_discount = subtotal - Decimal(discount)
+            if subtotal_after_discount < 0:
+                subtotal_after_discount = Decimal("0.00")
+
+            vat = (subtotal_after_discount * VAT_RATE)
+            grand = subtotal_after_discount + vat
+
+            sale.subtotal_amount = subtotal_after_discount
+            sale.vat_amount = vat
+            sale.total_amount = grand
+            sale.save()
+
+            # ✅ Redirect to printable HTML receipt (better UX)
+            return redirect("sale_receipt", sale_id=sale.id)
+        # add to track error  if the form is not valid
+        else:
+            print("SALE FORM ERRORS:", sale_form.errors)
+            print("FORMSET ERRORS:", formset.errors)
+    else:
+        sale_form = SaleForm()
+        formset = ItemFormset()
+
+    return render(request, "sales/create_sale.html", {
+        "sale_form": sale_form,
+        "formset": formset,
+        "prices_json": json.dumps(prices_json),
+        "sale_type": stype,
+    },
+)
+
+
+@login_required
+@has_any_group("Admin", "Staff", "Retail", "Wholesale")
+def sale_list(request):
+    qs = Sale.objects.all().order_by("-timestamp")
+
+    if request.user.groups.filter(name="Wholesale").exists():
+        qs = qs.filter(sale_type="wholesale")
+    elif request.user.groups.filter(name="Retail").exists():
+        qs = qs.filter(sale_type="retail")
+
+    return render(request, "sales/sale_list.html", {"sales": qs})
+
+
+
+
+# from decimal import Decimal
+# from django.shortcuts import render, redirect
+# from django.contrib.auth.decorators import login_required
+# from .models import Sale, SaleItem
+# from .forms import SaleForm, SaleItemForm
+# from inventory.models import Product
+# from django.forms import formset_factory
+# from users.utils import has_any_group
+# from django.shortcuts import render, get_object_or_404
+# from django.http import HttpResponse
+# from reportlab.lib.pagesizes import A5, landscape
+# from reportlab.pdfgen import canvas
+# from reportlab.lib.units import mm
+# from reportlab.lib import colors
+# import json
+# from io import BytesIO
+# from django.utils import timezone
+# from datetime import datetime
+# # with QR code generation
+# import qrcode
+# import base64
+
+# commented out on 20/12/2025 it has been replaced
+# 
 # @login_required
 # @has_any_group("Admin", "Staff")
 # def create_sale(request):
@@ -69,78 +191,84 @@ import base64
     
 # @login_required
 # @has_any_group("Admin", "Staff")
-def create_sale(request):
-    ItemFormset = formset_factory(SaleItemForm, extra=1)
+# 
+# # commented out on 20/12/2025 it has been replaced
 
-    # Send product prices to JS
-    products = Product.objects.all()
-    prices_json = {p.id: float(p.unit_price) for p in products}
+# def create_sale(request):
+#     ItemFormset = formset_factory(SaleItemForm, extra=1)
 
-    if request.method == "POST":
-        sale_form = SaleForm(request.POST)
-        formset = ItemFormset(request.POST)
+#     # Send product prices to JS
+#     products = Product.objects.all()
+#     prices_json = {p.id: float(p.unit_price) for p in products}
 
-        if sale_form.is_valid() and formset.is_valid():
+#     if request.method == "POST":
+#         sale_form = SaleForm(request.POST)
+#         formset = ItemFormset(request.POST)
 
-            # --- Create Sale ---
-            sale = sale_form.save(commit=False)
-            sale.created_by = request.user
-            sale.total_amount = 0
-            sale.save()
+#         if sale_form.is_valid() and formset.is_valid():
 
-            subtotal = 0
+#             # --- Create Sale ---
+#             sale = sale_form.save(commit=False)
+#             sale.created_by = request.user
+#             sale.total_amount = 0
+#             sale.save()
 
-            # --- Save Items ---
-            for f in formset:
-                if f.cleaned_data and f.cleaned_data.get("product"):
-                    item = f.save(commit=False)
-                    item.sale = sale
-                    item.save()
-                    subtotal += item.line_total()
+#             subtotal = 0
 
-            # --- Apply Discount ---
-            discount = Decimal(str(sale_form.cleaned_data.get("discount") or 0))
-            subtotal = Decimal(str(subtotal))
+#             # --- Save Items ---
+#             for f in formset:
+#                 if f.cleaned_data and f.cleaned_data.get("product"):
+#                     item = f.save(commit=False)
+#                     item.sale = sale
+#                     item.save()
+#                     subtotal += item.line_total()
+
+#             # --- Apply Discount ---
+#             discount = Decimal(str(sale_form.cleaned_data.get("discount") or 0))
+#             subtotal = Decimal(str(subtotal))
             
-            subtotal -= discount
-            if subtotal < 0:
-                subtotal = Decimal("0.00")
+#             subtotal -= discount
+#             if subtotal < 0:
+#                 subtotal = Decimal("0.00")
 
-            # --- VAT 15% ---
-            vat = subtotal * Decimal("0.15")
-            grand_total = subtotal + vat
+#             # --- VAT 15% ---
+#             vat = subtotal * Decimal("0.15")
+#             grand_total = subtotal + vat
 
-            # Save final total
-            sale.total_amount = grand_total
-            sale.save()
+#             # Save final total
+#             sale.total_amount = grand_total
+#             sale.save()
 
-            # Redirect correctly
-            return redirect("receipt_view", sale_id=sale.id)
+#             # Redirect correctly
+#             return redirect("receipt_view", sale_id=sale.id)
 
-        else:
-            print("SALE FORM ERRORS:", sale_form.errors)
-            print("FORMSET ERRORS:", formset.errors)
+#         else:
+#             print("SALE FORM ERRORS:", sale_form.errors)
+#             print("FORMSET ERRORS:", formset.errors)
 
-    else:
-        sale_form = SaleForm()
-        formset = ItemFormset()
+#     else:
+#         sale_form = SaleForm()
+#         formset = ItemFormset()
 
-    return render(
-        request,
-        "sales/create_sale.html",
-        {
-            "sale_form": sale_form,
-            "formset": formset,
-            "prices_json": json.dumps(prices_json),
-        },
-    )
+#     return render(
+#         request,
+#         "sales/create_sale.html",
+#         {
+#             "sale_form": sale_form,
+#             "formset": formset,
+#             "prices_json": json.dumps(prices_json),
+#         },
+#     )
     
 
 # @login_required
 # @has_any_group("Admin", "Staff") 
-def sale_list(request):
-    sales = Sale.objects.all().order_by('-timestamp') 
-    return render(request, "sales/sale_list.html", {"sales": sales})
+# 
+# commented out on 20/12/2025 it has been replaced
+# 
+# def sale_list(request):
+#     sales = Sale.objects.all().order_by('-timestamp') 
+#     return render(request, "sales/sale_list.html", {"sales": sales})
 
 
 

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Finance — Accounts{% endblock %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">🏦 Finance</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Bank accounts, credits & debits, and balances.</p>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Opening</div>
+        <div class="text-xl font-semibold text-slate-800 dark:text-slate-100">₵{{ opening|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Credits</div>
+        <div class="text-xl font-semibold text-green-600">₵{{ credits|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Debits</div>
+        <div class="text-xl font-semibold text-red-600">₵{{ debits|floatformat:2 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+        <div class="text-xs uppercase text-slate-500 dark:text-slate-400">Total Balance</div>
+        <div class="text-xl font-semibold text-slate-800 dark:text-slate-100">₵{{ total_balance|floatformat:2 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Accounts</h3>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs uppercase">
+          <tr>
+            <th class="p-3 text-left">Name</th>
+            <th class="p-3 text-left">Bank</th>
+            <th class="p-3 text-left">Account No.</th>
+            <th class="p-3 text-right">Opening</th>
+            <th class="p-3 text-center">Status</th>
+            <th class="p-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for a in accounts %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+            <td class="p-3 font-medium text-slate-800 dark:text-slate-100">{{ a.name }}</td>
+            <td class="p-3 text-slate-600 dark:text-slate-300">{{ a.bank_name|default:"—" }}</td>
+            <td class="p-3 text-slate-600 dark:text-slate-300">{{ a.account_number|default:"—" }}</td>
+            <td class="p-3 text-right text-slate-800 dark:text-slate-100">₵{{ a.opening_balance|floatformat:2 }}</td>
+            <td class="p-3 text-center">
+              {% if a.is_active %}
+                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Active</span>
+              {% else %}
+                <span class="px-2 py-1 rounded-full text-xs bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="p-3 text-right">
+              <a href="{% url 'finance:account_detail' a.id %}" class="btn-primary">Open</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="p-6 text-center text-slate-500 dark:text-slate-400">No accounts yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

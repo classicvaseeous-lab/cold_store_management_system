@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'reports.apps.ReportsConfig',
     'sales.apps.SalesConfig',
     'users.apps.UsersConfig',
+    "employees.apps.EmployeesConfig",
+    "assets.apps.AssetsConfig",
+    "finance.apps.FinanceConfig",
 ]
 
 MIDDLEWARE = [

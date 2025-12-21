@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load form_filters %}
+{% block title %}Add Vehicle — ColdStore{% endblock %}
+{% block content %}
+
+<div class="max-w-xl mx-auto">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+    <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">+ Add Vehicle</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+      Enter the company car details.
+    </p>
+
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Vehicle Name</label>
+        {{ form.name|add_class:"form-control" }}
+        {% if form.name.errors %}
+          <p class="text-sm text-red-600 mt-1">{{ form.name.errors|striptags }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Plate Number</label>
+        {{ form.plate_number|add_class:"form-control" }}
+        {% if form.plate_number.errors %}
+          <p class="text-sm text-red-600 mt-1">{{ form.plate_number.errors|striptags }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Description (optional)</label>
+        {{ form.description|add_class:"form-control" }}
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button type="submit" class="btn-primary w-full sm:w-auto">Save Vehicle</button>
+        <a href="{% url 'assets:vehicle_list' %}" class="btn-secondary w-full sm:w-auto text-center">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
