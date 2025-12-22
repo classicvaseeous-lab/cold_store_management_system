@@ -117,16 +117,21 @@
         <li><a href="{% url 'inventory_dashboard' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Dashboard</a></li>
         <li><a href="{% url 'product_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Products</a></li>
 
-        {% if request.user|has_group:"Admin" %}
+        
           <li class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">
             Price Lists
           </li>
+          {% comment %} {% if request.user|has_group:"staff" %} {% endcomment %}
           <li><a href="{% url 'retail_price_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Retail Prices</a></li>
+          {% comment %} {% endif %} {% endcomment %}
+
+          {% if request.user|has_group:"Admin" %}
           <li><a href="{% url 'wholesale_price_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Wholesale Prices</a></li>
-        {% endif %}
+        
 
         <li><a href="{% url 'stock_in' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Stock In</a></li>
         <li><a href="{% url 'stock_out' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Stock Out</a></li>
+        {% endif %}
         <li><a href="{% url 'create_sale' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">New Sale</a></li>
 
         <li class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">Sales</li>
@@ -141,12 +146,12 @@
         {% if request.user|has_group:"Admin" or request.user|has_group:"Accountant" %}
           <!-- ✅ Vehicle assets app link -->
           <li><a href="{% url 'assets:vehicle_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">🚗 Company Cars</a></li>
-        {% endif %}
+        
 
-        <li><a href="{% url 'account_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Finance</a></li>
+        <li><a href="{% url 'finance:account_list' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Finance</a></li>
         <li><a href="{% url 'reports_summary' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Reports</a></li>
         <li><a href="{% url 'analytics_dashboard' %}" class="block py-2 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700">Analytics</a></li>
-
+      {% endif %}
       </ul>
     </nav>
 

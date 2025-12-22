@@ -26,3 +26,6 @@ class BankTransactionForm(forms.ModelForm):
         if amt is None or amt <= 0:
             raise forms.ValidationError("Amount must be greater than 0.")
         return amt
+
+
+

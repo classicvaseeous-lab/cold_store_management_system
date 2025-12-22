@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load form_filters %}
+{% block title %}{{ title }} — Finance{% endblock %}
+{% block content %}
+
+<div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
+  <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ title }}</h2>
+
+  <form method="post" class="mt-5 space-y-4">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">{{ field.label }}</label>
+        {{ field|add_class:"form-control" }}
+        {% if field.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ field.errors|striptags }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="flex gap-2">
+      <button class="btn-primary">Save</button>
+      <a href="{% url 'finance:account_list' %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

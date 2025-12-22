@@ -91,6 +91,29 @@
   </div>
 
   <!-- Transactions -->
+  <form method="get" class="mt-4 grid grid-cols-1 md:grid-cols-8 gap-2">
+
+  <input type="number" name="y" value="{{ y }}" class="form-control md:col-span-1" placeholder="Year" />
+  <input type="number" name="m" value="{{ m }}" class="form-control md:col-span-1" placeholder="Month" />
+
+  <input type="date" name="from" value="{{ date_from }}" class="form-control md:col-span-1" />
+  <input type="date" name="to" value="{{ date_to }}" class="form-control md:col-span-1" />
+
+  <select name="type" class="form-control md:col-span-1">
+    <option value="">All types</option>
+    <option value="credit" {% if tx_type == "credit" %}selected{% endif %}>Credit</option>
+    <option value="debit" {% if tx_type == "debit" %}selected{% endif %}>Debit</option>
+  </select>
+
+  <input type="search" name="q" value="{{ q }}" placeholder="Search title/ref/notes..." class="form-control md:col-span-2" />
+
+  <div class="flex gap-2 md:col-span-1">
+    <button class="btn-secondary w-full">Filter</button>
+    <a href="{% url 'finance:account_detail' account.id %}" class="btn-secondary w-full">Reset</a>
+  </div>
+
+</form>
+
   <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
