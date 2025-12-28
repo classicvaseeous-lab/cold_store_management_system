@@ -6,17 +6,41 @@
     <div class="grid grid-cols-3 gap-3">
       <div class="p-4 bg-slate-50 rounded">
         <div class="text-xs text-slate-500">Total sales</div>
-        <div class="text-xl font-semibold">₵{{ total_sales }}</div>
+        <div class="text-xl font-semibold">₵{{ total_sales|floatformat:2 }}</div>
       </div>
       <div class="p-4 bg-slate-50 rounded">
         <div class="text-xs text-slate-500">Expenses</div>
-        <div class="text-xl font-semibold">₵{{ total_expenses }}</div>
+        <div class="text-xl font-semibold">₵{{ total_expenses|floatformat:2 }}</div>
       </div>
       <div class="p-4 bg-slate-50 rounded">
         <div class="text-xs text-slate-500">Profit</div>
-        <div class="text-xl font-semibold">₵{{ gross_profit }}</div>
+        <div class="text-xl font-semibold">₵{{ gross_profit|floatformat:2 }}</div>
       </div>
     </div>
+{% comment %} added to track credit metrics {% endcomment %}
+    
+    {% comment %} <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4"> {% endcomment %}
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    
+  <div class="rounded-xl border p-4">
+    <div class="text-xs uppercase text-slate-500">Credit Sales</div>
+    <div class="text-xl font-semibold">₵{{ credit_sales_total|floatformat:2 }}</div>
+  </div>
+  <div class="rounded-xl border p-4">
+    <div class="text-xs uppercase text-slate-500">Outstanding Credit</div>
+    <div class="text-xl font-semibold text-red-600">₵{{ credit_outstanding|floatformat:2 }}</div>
+  </div>
+  <div class="rounded-xl border p-4">
+    <div class="text-xs uppercase text-slate-500">Credit Paid</div>
+    <div class="text-xl font-semibold text-green-600">
+      ₵{{ credit_paid_via_payments|floatformat:2 }}
+    </div>
+    <div class="text-xs text-slate-500 mt-1">
+      (fallback: ₵{{ credit_paid_via_sales|floatformat:2 }})
+    </div>
+  </div>
+</div>
+{% comment %} added to track credit metrics {% endcomment %}
 
     <div class="mt-6">
       <h4 class="font-medium mb-2">Sales vs Expenses (last 30 days)</h4>

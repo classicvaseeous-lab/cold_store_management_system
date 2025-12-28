@@ -11,21 +11,39 @@
   </div>
 
   <!-- Actions -->
-  <div class="flex justify-between items-center mb-4">
+  {% comment %} <div class="flex justify-between items-center mb-4"> {% endcomment %}
+  <div class="flex justify-between items-center mb-4 print:hidden">
     <div>
       <a href="{% url 'create_sale' %}" class="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300">← New Sale</a>
     </div>
     <div class="space-x-2">
-      <a href="{% url 'receipt_view' sale.id %}" target="_blank" class="px-3 py-1 bg-green-600 text-white rounded">Download PDF</a>
+      <a href="{% url 'receipt_view' sale.id %}" target="_blank" class="px-3 py-1 bg-green-700 text-white rounded">Download PDF</a>
       <button onclick="window.print()" class="px-3 py-1 bg-blue-600 text-white rounded">Print Receipt</button>
     </div>
   </div>
 
   <!-- Receipt Info -->
+  {% if sale.is_credit %}
+  <p class="text-red-600 font-semibold">
+    CREDIT SALE • Paid: ₵{{ sale.amount_paid|floatformat:2 }} • Balance: ₵{{ sale.balance_due_calc|floatformat:2 }}
+  </p>
+  {% if sale.due_date %}
+    <p>Due date: {{ sale.due_date }}</p>
+  {% endif %}
+  {% endif %}
+
   <div class="mb-4 space-y-1 text-slate-700">
     <p>Date: {{ sale.timestamp|date:"Y-m-d H:i" }}</p>
     <p>Receipt No: CS-{{ sale.id|stringformat:"04d" }}</p>
-    <p>Cashier: {{ sale.created_by.get_full_name|default:sale.created_by.username }}</p>
+    {% comment %} <p>Cashier: {{ sale.created_by.get_full_name|default:sale.created_by.username }}</p> {% endcomment %}
+    <p>Cashier:
+    {% if sale.created_by %}
+    {{ sale.created_by.get_full_name|default:sale.created_by.username }}
+    {% else %}
+      —
+    {% endif %}
+    </p>
+
     <p>Customer: {{ sale.customer_name|default:"Walk-in Customer" }}</p>
     <p>Payment Method: {{ sale.get_payment_method_display }}</p>
   </div>
@@ -55,11 +73,12 @@
 
           <td class="p-2 text-right">{{ item.quantity }}</td>
           <td class="p-2 text-right">{{ item.unit_price|floatformat:2 }}</td>
-          <td class="p-2 text-right">{{ item.line_total|floatformat:2 }}</td>
+          <td class="p-2 text-right">{{ item.line_total_amount|floatformat:2 }}</td>
+          {% comment %} <td class="p-2 text-right">{{ item.line_total|floatformat:2 }}</td> {% endcomment %}
         </tr>
         {% endfor %}
       </tbody>
-      <tfoot class="mt-2 border-t border-slate-300">
+      <tfoot class="mt-2 border-t border-slate-700">
         <tr class="font-semibold">
           <td colspan="3" class="p-2 text-right">Subtotal</td>
           <td class="p-2 text-right">₵{{ subtotal|floatformat:2 }}</td>
@@ -97,7 +116,17 @@
 </div>
 
 <!-- Print Styles -->
+
 <style>
+  @media print {
+    @page { size: A4; margin: 15mm; }
+    body { background: #fff !important; color: #000 !important; }
+    a, button { display: none !important; } /* optional */
+  }
+</style>
+{% endblock %}
+
+{% comment %} <style>
   @media print {
     @page { size: A4; margin: 15mm; }
     body { -webkit-print-color-adjust: exact; color-adjust: exact; background: #fff; font-family: 'DejaVu Sans', sans-serif; }
@@ -105,8 +134,7 @@
     .dark\:text-gray-100 { color: #000 !important; }
     .shadow-md { box-shadow: none !important; }
   }
-</style>
-{% endblock %}
+</style> {% endcomment %}
 
 {% comment %} {% extends 'base.html' %}
 {% block content %}

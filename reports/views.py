@@ -2,7 +2,7 @@
  
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from sales.models import Sale, SaleItem
 from expenses.models import Expense
 from inventory.models import Product
@@ -14,7 +14,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from io import BytesIO
 from datetime import datetime
- 
+from decimal import Decimal
+from django.db.models import Sum
+from datetime import datetime, timedelta
+from users.utils import has_any_group
+from django.template.loader import render_to_string
 
 try:
     import openpyxl  # type: ignore
@@ -26,9 +30,7 @@ except Exception:
     def get_column_letter(n):
         return str(n)
     OPENPYXL_AVAILABLE = False
-from datetime import datetime, timedelta
-from users.utils import has_any_group
-from django.template.loader import render_to_string
+
  
 
  # WeasyPrint import attempt (may raise if system deps missing)
@@ -44,15 +46,26 @@ try:
     XHTML2PDF_AVAILABLE = True
 except Exception:
     XHTML2PDF_AVAILABLE = False
-    
-# @login_required
-# @has_any_group("Admin","Accountant")
+
+
+# if you added CreditPayment model
+try:
+    from sales.models import CreditPayment
+    HAS_CREDIT_PAYMENTS = True
+except Exception:
+    CreditPayment = None
+    HAS_CREDIT_PAYMENTS = False
+
+
+@login_required
+@has_any_group("Admin","Accountant")
 def summary(request):
-    # date filters
     start = request.GET.get("start")
     end = request.GET.get("end")
+
     qs_sales = Sale.objects.all()
     qs_expenses = Expense.objects.all()
+
     if start:
         qs_sales = qs_sales.filter(timestamp__date__gte=start)
         qs_expenses = qs_expenses.filter(timestamp__date__gte=start)
@@ -60,56 +73,57 @@ def summary(request):
         qs_sales = qs_sales.filter(timestamp__date__lte=end)
         qs_expenses = qs_expenses.filter(timestamp__date__lte=end)
 
-    total_sales = qs_sales.aggregate(total=Sum("total_amount"))["total"] or 0
-    total_expenses = qs_expenses.aggregate(total=Sum("amount"))["total"] or 0
-
-    # approximate cost calculation: assume product.unit_price is sale price; to compute gross profit we need cost price.
-    # If you track cost price, use it. For demo we'll subtract expenses only.
+    total_sales = qs_sales.aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
+    total_expenses = qs_expenses.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
     gross_profit = total_sales - total_expenses
 
-    best_selling = SaleItem.objects.values("product__name").annotate(qty=Sum("quantity")).order_by("-qty")[:10]
+    # ✅ CREDIT METRICS
+    credit_qs = qs_sales.filter(is_credit=True)
+
+    credit_sales_total = credit_qs.aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
+    # compute outstanding as sum of (total_amount - amount_paid)
+    credit_outstanding_expr = ExpressionWrapper(F("total_amount") - F("amount_paid"), output_field=DecimalField())
+    credit_outstanding = credit_qs.aggregate(total=Sum(credit_outstanding_expr))["total"] or Decimal("0.00")
+
+    # option A (simple): use Sale.amount_paid
+    credit_paid_via_sales = credit_qs.aggregate(total=Sum("amount_paid"))["total"] or Decimal("0.00")
+
+    # option B (better): use CreditPayment records if you have them
+    credit_paid_via_payments = Decimal("0.00")
+    if HAS_CREDIT_PAYMENTS:
+        pay_qs = CreditPayment.objects.filter(sale__in=credit_qs)
+        credit_paid_via_payments = pay_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+    best_selling = (
+        SaleItem.objects
+        .values("product__name")
+        .annotate(qty=Sum("quantity"))
+        .order_by("-qty")[:10]
+    )
 
     context = {
         "total_sales": total_sales,
         "total_expenses": total_expenses,
         "gross_profit": gross_profit,
         "best_selling": best_selling,
+
+        # ✅ add these to template
+        "credit_sales_total": credit_sales_total,
+        "credit_outstanding": credit_outstanding,
+        "credit_paid_via_sales": credit_paid_via_sales,
+        "credit_paid_via_payments": credit_paid_via_payments,
+        "start": start,
+        "end": end,
     }
     return render(request, "reports/summary.html", context)
 
-# @login_required
-def export_sales_csv(request):
-    sales = Sale.objects.all().order_by("-timestamp")
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
-    writer = csv.writer(response)
-    writer.writerow(["Sale ID", "Date", "Created By", "Total"])
-    for s in sales:
-        writer.writerow([s.id, s.timestamp, s.created_by.username if s.created_by else "", s.total_amount])
-    return response
-# added by frank for exporting expenses to csv
-# added by frank for exporting expenses to csv
-# @login_required
-def export_expenses_csv(request):
-    expenses = Expense.objects.all().order_by("-timestamp")
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="expenses_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
-    writer = csv.writer(response)
-    writer.writerow(["Expense ID", "Date", "Created By", "Amount", "Category", "Note"])
-    for e in expenses:
-        writer.writerow([e.id, e.timestamp, e.created_by.username if e.created_by else "", e.amount, e.category.name if e.category else "", e.note])
-    return response
-
-
-
- 
-#  same code as the one above on summary view but commented out to avoid duplication
+       
 # @login_required
 # @has_any_group("Admin","Accountant")
 # def summary(request):
+#     # date filters
 #     start = request.GET.get("start")
 #     end = request.GET.get("end")
-
 #     qs_sales = Sale.objects.all()
 #     qs_expenses = Expense.objects.all()
 #     if start:
@@ -121,6 +135,9 @@ def export_expenses_csv(request):
 
 #     total_sales = qs_sales.aggregate(total=Sum("total_amount"))["total"] or 0
 #     total_expenses = qs_expenses.aggregate(total=Sum("amount"))["total"] or 0
+
+#     # approximate cost calculation: assume product.unit_price is sale price; to compute gross profit we need cost price.
+#     # If you track cost price, use it. For demo we'll subtract expenses only.
 #     gross_profit = total_sales - total_expenses
 
 #     best_selling = SaleItem.objects.values("product__name").annotate(qty=Sum("quantity")).order_by("-qty")[:10]
@@ -134,7 +151,33 @@ def export_expenses_csv(request):
 #     return render(request, "reports/summary.html", context)
 
 # @login_required
-# @has_any_group("Admin","Accountant")
+# def export_sales_csv(request):
+#     sales = Sale.objects.all().order_by("-timestamp")
+#     response = HttpResponse(content_type="text/csv")
+#     response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+#     writer = csv.writer(response)
+#     writer.writerow(["Sale ID", "Date", "Created By", "Total"])
+#     for s in sales:
+#         writer.writerow([s.id, s.timestamp, s.created_by.username if s.created_by else "", s.total_amount])
+#     return response
+# added by frank for exporting expenses to csv
+@login_required
+def export_expenses_csv(request):
+    expenses = Expense.objects.all().order_by("-timestamp")
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="expenses_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Expense ID", "Date", "Created By", "Amount", "Category", "Note"])
+    for e in expenses:
+        writer.writerow([e.id, e.timestamp, e.created_by.username if e.created_by else "", e.amount, e.category.name if e.category else "", e.note])
+    return response
+
+
+
+
+
+@login_required
+@has_any_group("Admin","Accountant")
 def export_sales_csv(request):
     sales = Sale.objects.all().order_by("-timestamp")
     response = HttpResponse(content_type="text/csv")
@@ -145,8 +188,8 @@ def export_sales_csv(request):
         writer.writerow([s.id, s.timestamp, s.created_by.username if s.created_by else "", s.total_amount])
     return response
 
-# @login_required
-# @has_any_group("Admin","Accountant")
+@login_required
+@has_any_group("Admin","Accountant")
 def export_sales_excel(request):
     if not OPENPYXL_AVAILABLE:
         return HttpResponse(
@@ -188,10 +231,8 @@ def export_sales_excel(request):
     response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
     return response
 
-# @login_required
-# @has_any_group("Admin","Accountant")
-
-
+@login_required
+@has_any_group("Admin","Accountant")
 def export_sales_pdf(request):
     sales = Sale.objects.all().order_by('-timestamp')
 
@@ -232,52 +273,7 @@ def export_sales_pdf(request):
     response['Content-Disposition'] = f'attachment; filename="sales_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"'
     return response
 
-# formal export sales pdf with WeasyPrint and xhtml2pdf fallback
-# def export_sales_pdf(request):
-#     """
-#     Export sales PDF. Prefer WeasyPrint (better CSS) but fallback to xhtml2pdf (pisa)
-#     if WeasyPrint isn't available on the system.
-#     """
-#     sales = Sale.objects.all().order_by("-timestamp")
-#     context = {"sales": sales, "generated_on": datetime.now()}
-
-#     html_string = render_to_string("reports/sales_pdf.html", context)
-
-#     # 1) Try WeasyPrint if available
-#     if WEASYPRINT_AVAILABLE:
-#         try:
-#             html = HTML(string=html_string)
-#             pdf = html.write_pdf()
-#             response = HttpResponse(pdf, content_type="application/pdf")
-#             response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-#             return response
-#         except Exception as e:
-#             # If WeasyPrint fails for some reason, fall through to xhtml2pdf attempt
-#             # Log error in real app; here we continue to fallback.
-#             print("WeasyPrint failed:", e)
-
-#     # 2) Fallback: xhtml2pdf / pisa (pure-Python)
-#     if XHTML2PDF_AVAILABLE:
-#         result = io.BytesIO()
-#         # pisa.CreatePDF expects bytes or a file-like object containing the HTML.
-#         pisa_status = pisa.CreatePDF(src=html_string, dest=result)
-#         if pisa_status.err:
-#             return HttpResponse("PDF generation failed (xhtml2pdf).", status=500)
-#         result.seek(0)
-#         response = HttpResponse(result.read(), content_type="application/pdf")
-#         response["Content-Disposition"] = f'attachment; filename="sales_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-#         return response
-
-#     # 3) Neither library available -> informative error
-#     return HttpResponse(
-#         "No PDF rendering library available. Install WeasyPrint (recommended) with its system dependencies "
-#         "or xhtml2pdf (pip install xhtml2pdf).",
-#         status=500,
-#     )
-
-# Chart data API for front-end Chart.js
-# @login_required
-# @has_any_group("Admin","Accountant")
+ 
 def chart_sales_vs_expenses(request):
     # last 30 days
     days = int(request.GET.get("days", 30))

@@ -26,7 +26,18 @@
       </p>
     </div>
   </div>
-
+  {% comment %} to track credit sales and outstanding credit for the last 7 days {% endcomment %}
+   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+  <div class="rounded-xl border p-4">
+    <div class="text-xs uppercase text-slate-500">Credit Sales (7 days)</div>
+    <div class="text-xl font-semibold">₵{{ period_credit_sales|floatformat:2 }}</div>
+  </div>
+  <div class="rounded-xl border p-4">
+    <div class="text-xs uppercase text-slate-500">Outstanding Credit (7 days)</div>
+    <div class="text-xl font-semibold text-red-600">₵{{ period_credit_outstanding|floatformat:2 }}</div>
+  </div>
+</div>
+  {% comment %} to track credit sales and outstanding credit for the last 7 days {% endcomment %}
   <!-- Charts -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="card bg-white dark:bg-slate-800 p-4">
@@ -70,6 +81,8 @@
   const salesData = {{ sales_data|safe }};
   const expenseData = {{ expense_data|safe }};
   const profitData = {{ profit_data|safe }};
+  const creditSalesData = {{ credit_sales_data|safe }};
+  const creditOutstandingData = {{ credit_outstanding_data|safe }};
 
   // Sales vs Expenses
   new Chart(document.getElementById('salesChart'), {

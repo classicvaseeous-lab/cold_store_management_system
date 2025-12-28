@@ -12,8 +12,58 @@
     {% csrf_token %}
     {{ formset.management_form }}
 
+
     <!-- CUSTOMER INFO -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  <div>
+    <label class="text-sm">Customer Name</label>
+    {{ sale_form.customer_name|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+  <div>
+    <label class="text-sm">Customer Phone</label>
+    {{ sale_form.customer_phone|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  <div>
+    <label class="text-sm">Payment Method</label>
+    {{ sale_form.payment_method|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+{% comment %} added to track credit option {% endcomment %}
+
+  {% comment %} <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"> {% endcomment %}
+  <div>
+    <label class="text-sm">Amount Paid Now (₵) - optional</label>
+    {{ sale_form.amount_paid|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+  <div>
+    <label class="text-sm">Due Date (optional)</label>
+    {{ sale_form.due_date|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+  {% comment %} </div> {% endcomment %}
+{% comment %} added to track credit option {% endcomment %}
+  <div>
+    <label class="text-sm">Discount (₵)</label>
+    {{ sale_form.discount|add_class:"discount-input w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+</div>
+
+<!-- ✅ CREDIT FIELDS (hidden unless credit selected) -->
+<div id="creditFields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  <div>
+    <label class="text-sm">Amount Paid Now (₵)</label>
+    {{ sale_form.amount_paid|add_class:"amount-paid-input w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+  <div>
+    <label class="text-sm">Due Date</label>
+    {{ sale_form.due_date|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
+  </div>
+</div>
+
+    <!-- CUSTOMER INFO  replaced with the one above it-->
+    
+    {% comment %} <div class="grid grid-cols-2 gap-4 mb-6">
       <div>
         <label class="text-sm">Customer Name</label>
         {{ sale_form.customer_name|add_class:"w-full rounded-lg p-2 border dark:bg-gray-700" }}
@@ -33,19 +83,21 @@
         <label class="text-sm">Discount (₵)</label>
         {{ sale_form.discount|add_class:"discount-input w-full rounded-lg p-2 border dark:bg-gray-700" }}
       </div>
-    </div>
+    </div>  we are texting something special here to see if the form will be responsiveon mobile{% endcomment %}
 
     <!-- ITEMS -->
-    <h3 class="text-lg font-semibold mt-4 mb-2 text-slate-300">🧺 Items</h3>
+    <h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">🧺 Items</h3>
 
     <div id="items" class="space-y-4">
       {% for form in formset.forms %}
-      <div class="item-row grid grid-cols-12 gap-3 p-4 bg-slate-50 dark:bg-gray-700 border rounded-lg">
+      {% comment %} replaced with the one beneath it {% endcomment %}
+      {% comment %} <div class="item-row grid grid-cols-12 gap-3 p-4 bg-slate-50 dark:bg-gray-700 border rounded-lg"> {% endcomment %}
+      <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 dark:bg-gray-700 border rounded-lg">
 
         <div class="col-span-4">
           <label class="text-sm">Product</label>
           {# ensure the product select has class product-select and keeps its name/id from Django formset #}
-          {{ form.product|add_class:"product-select w-full rounded-lg p-2 border border-slate-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" }}
+          {{ form.product|add_class:"product-select w-full rounded-lg p-2 border border-slate-700 dark:border-gray-600 dark:bg-gray-700 dark:text-white" }}
         </div>
 
         <div class="col-span-2">
@@ -55,12 +107,12 @@
 
         <div class="col-span-2">
           <label class="text-sm">Unit Price (₵)</label>
-          {{ form.unit_price|add_class:"price-input w-full rounded-lg p-2 border border-slate-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" }}
+          {{ form.unit_price|add_class:"price-input w-full rounded-lg p-2 border border-slate-700 dark:border-gray-600 dark:bg-gray-700 dark:text-white" }}
         </div>
 
         <div class="col-span-3">
           <label class="text-sm">Item Total (₵)</label>
-          <input type="text" class="item-total w-full rounded-lg p-2 bg-gray-200 dark:bg-gray-600 text-right" readonly>
+          <input type="text" class="item-total w-full rounded-lg p-2 bg-gray-200 dark:bg-gray-700 text-right" readonly>
         </div>
 
         <div class="col-span-1 flex items-end justify-end">
@@ -78,25 +130,25 @@
 
     <!-- TOTAL SUMMARY (Option B large/styled) -->
     <div class="mt-6 p-4 bg-white dark:bg-slate-800 border rounded-lg shadow-sm max-w-md ml-auto">
-      <div class="text-sm text-slate-300 mb-2">Summary</div>
+      <div class="text-sm text-slate-700 mb-2">Summary</div>
 
       <div class="flex justify-between items-center">
-        <div class="text-slate-300">Subtotal</div>
+        <div class="text-slate-700">Subtotal</div>
         <div class="font-medium">₵ <span id="subTotal">0.00</span></div>
       </div>
 
       <div class="flex justify-between items-center mt-2">
-        <div class="text-slate-300">Discount</div>
+        <div class="text-slate-700">Discount</div>
         <div class="font-medium">₵ <span id="discountDisplay">0.00</span></div>
       </div>
 
       <div class="flex justify-between items-center mt-2">
-        <div class="text-slate-300">VAT (15%)</div>
+        <div class="text-slate-700">VAT (15%)</div>
         <div class="font-medium">₵ <span id="vatAmount">0.00</span></div>
       </div>
 
       <div class="border-t mt-3 pt-3 text-right">
-        <div class="text-lg text-slate-300">Grand Total</div>
+        <div class="text-lg text-slate-700">Grand Total</div>
         <div class="text-2xl font-bold text-slate-900 dark:text-white">₵ <span id="grandTotal">0.00</span></div>
       </div>
     </div>
