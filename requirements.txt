@@ -1,4 +1,4 @@
-psycopg2-binary==2.9.7
+psycopg[binary]==3.2.3
 arabic-reshaper==3.0.0
 asgiref==3.10.0
 asn1crypto==1.5.1
