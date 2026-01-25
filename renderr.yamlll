@@ -12,3 +12,8 @@ services:
         generate: true
       - key: DEBUG
         value: "False"
+  - type: pserv
+    name: coldstore-postgres
+    env: postgres
+    plan: free
+    # Postgres-specific settings are not required
