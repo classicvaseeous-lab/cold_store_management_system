@@ -107,7 +107,17 @@ def create_sale(request):
             "retail_price": float(wp.retail_price),
             "wholesale_price": float(wp.wholesale_price),
         })
-
+# addedd on 26th January 2026
+    
+    products_json = {}
+    for p in Product.objects.all().only("id", "unit_price", "wholesale_price", "is_weighted"):
+        products_json[str(p.id)] = {
+            "is_weighted": bool(p.is_weighted),
+            "retail_price": float(p.unit_price or 0),
+            "wholesale_price": float(p.wholesale_price or 0),
+        }
+# addedd on 26th January 2026
+    
     if request.method == "POST":
         sale_form = SaleForm(request.POST)
         formset = ItemFormset(request.POST)
@@ -207,6 +217,7 @@ def create_sale(request):
         "formset": formset,
         "sale_type": stype,
         "weights_json": json.dumps(weights_json),
+         "products_json": json.dumps(products_json),  # ✅ ADD THIS
     })
     
     

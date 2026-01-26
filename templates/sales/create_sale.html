@@ -217,6 +217,7 @@
 
 <script>
   const WEIGHTS = {{ weights_json|safe }};
+  const PRODUCTS = {{ products_json|safe }};
   const SALE_TYPE = "{{ sale_type }}";
 
   // ✅ IMPORTANT: Make VAT match your backend (must match sales/views.py)
@@ -254,16 +255,36 @@
 
     sizeSelect.empty();
 
-    if (!productId || !isBoxed(productId)) {
-      // unit product
-      sizeSelect.append(new Option("—", "", true, true));
-      sizeSelect.prop("disabled", true);
-      clearWeight(row);
 
-      unitPrice.val("0.00");
-      lockPrice(row, true);
-      return;
-    }
+    //if (!productId || !isBoxed(productId)) {
+     // // unit product
+     // sizeSelect.append(new Option("—", "", true, true));
+     // sizeSelect.prop("disabled", true);
+     // clearWeight(row);
+//
+    //  unitPrice.val("0.00");
+    //  lockPrice(row, true);
+    //  return;
+   // }
+    if (!productId || !isBoxed(productId)) {
+  // ✅ UNIT PRODUCT
+  sizeSelect.append(new Option("—", "", true, true));
+  sizeSelect.prop("disabled", true);
+
+  // clear weight selection
+  sizeSelect.val("").trigger("change.select2");
+
+  // ✅ set correct unit price for unit products
+  const info = PRODUCTS[String(productId)];
+  if (info) {
+    const price = (SALE_TYPE === "wholesale") ? info.wholesale_price : info.retail_price;
+    unitPrice.val(Number(price || 0).toFixed(2));
+  } else {
+    unitPrice.val("0.00");
+  }
+
+  return;
+}
 
     // boxed-weight product
     sizeSelect.prop("disabled", false);

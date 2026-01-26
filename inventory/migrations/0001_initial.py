@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('current_box', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.stockbox')),
-                ('size', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='allocation', to='inventory.saleableweightsize')),
+                ('size', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='allocation', to='inventory.SaleableWeightSize')),
             ],
         ),
     ]

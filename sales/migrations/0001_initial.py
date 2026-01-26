@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('unit_price', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('product', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.product')),
                 ('sale', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='sales.sale')),
-                ('weight_size', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.saleableweightsize')),
+                ('weight_size', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.SaleableWeightSize')),
             ],
         ),
     ]
