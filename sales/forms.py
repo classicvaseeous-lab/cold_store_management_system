@@ -12,10 +12,14 @@ class SaleForm(forms.ModelForm):
         model = Sale
         fields = [
             "customer_name", "customer_phone",
+            "sale_type",
             "payment_method", "discount",
             "apply_vat",
             "amount_paid", "due_date"
         ]
+        widgets = {
+            'sale_type': forms.RadioSelect(attrs={'class': 'sale-type-radio'}),
+        }
 
     def clean(self):
         cleaned = super().clean()
@@ -129,7 +133,7 @@ class CreditPaymentForm(forms.ModelForm):
         amt = self.cleaned_data.get("amount") or Decimal("0.00")
         if amt <= Decimal("0.00"):
             raise forms.ValidationError("Payment amount must be greater than 0.")
-        return amt
+#         return amt
 # """
 
 # # sales/forms.py
@@ -342,7 +346,7 @@ class CreditPaymentForm(forms.ModelForm):
 #             raise forms.ValidationError("Payment amount must be greater than 0.")
 #         return amt
 # """
-# # # sales/forms.py
+# # sales/forms.py
 # from django import forms
 # from decimal import Decimal
 # from .models import Sale, SaleItem, CreditPayment
