@@ -2,7 +2,6 @@ from decimal import Decimal
 import json
 from io import BytesIO
 import base64
-from urllib import request
 import qrcode
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator
@@ -121,96 +120,107 @@ def create_sale(request):
         sale_form = SaleForm(request.POST)
         formset = ItemFormset(request.POST)
 
+        print(f"Sale form valid: {sale_form.is_valid()}")
+        print(f"Formset valid: {formset.is_valid()}")
+        if sale_form.errors:
+            print(f"Sale form errors: {sale_form.errors}")
+        if formset.errors:
+            print(f"Formset errors: {formset.errors}")
+
         if sale_form.is_valid() and formset.is_valid():
-            sale = sale_form.save(commit=False)
-            sale.created_by = request.user
-            sale.sale_type = stype
-            sale.is_credit = (sale.payment_method == "credit")
-            sale.save()
+            try:
+                print("Saving sale...")
+                sale = sale_form.save(commit=False)
+                sale.created_by = request.user
+                sale.sale_type = stype
+                sale.is_credit = (sale.payment_method == "credit")
+                sale.save()
 
-            subtotal = Decimal("0.00")
+                subtotal = Decimal("0.00")
 
-            # lock products for safe stock update
-            # (we will fetch per item using select_for_update)
-            for f in formset:
-                if not f.cleaned_data or not f.cleaned_data.get("product"):
-                    continue
+                # lock products for safe stock update
+                # (we will fetch per item using select_for_update)
+                for f in formset:
+                    if not f.cleaned_data or not f.cleaned_data.get("product"):
+                        continue
 
-                product = Product.objects.select_for_update().get(id=f.cleaned_data["product"].id)
-                qty = int(f.cleaned_data.get("quantity") or 0)
-                weight_price = f.cleaned_data.get("weight_price")  # may be None
+                    product = Product.objects.select_for_update().get(id=f.cleaned_data["product"].id)
+                    qty = int(f.cleaned_data.get("quantity") or 0)
+                    weight_price = f.cleaned_data.get("weight_price")  # may be None
 
-                item = SaleItem(sale=sale, product=product, quantity=qty)
+                    item = SaleItem(sale=sale, product=product, quantity=qty)
 
-                # ✅ CASE 1: Weight sale (fish)
-                if weight_price:
-                    # re-fetch weight_price safely
-                    wp = ProductWeightPrice.objects.select_related("product").get(id=weight_price.id)
+                    # ✅ CASE 1: Weight sale (fish)
+                    if weight_price:
+                        # re-fetch weight_price safely
+                        wp = ProductWeightPrice.objects.select_related("product").get(id=weight_price.id)
 
-                    # force correct pricing server-side
-                    item.weight_price = wp
-                    item.unit_price = wp.wholesale_price if stype == "wholesale" else wp.retail_price
+                        # force correct pricing server-side
+                        item.weight_price = wp
+                        item.unit_price = wp.wholesale_price if stype == "wholesale" else wp.retail_price
 
-                    sold_kg = Decimal(qty) * Decimal(wp.weight_kg)
-                    consume_weight(product=product, kg_to_sell=sold_kg)
+                        sold_kg = Decimal(qty) * Decimal(wp.weight_kg)
+                        consume_weight(product=product, kg_to_sell=sold_kg)
 
-                    # consume_weight_from_product(product, sold_kg)
+                        # consume_weight_from_product(product, sold_kg)
 
-                # ✅ CASE 2: Normal unit sale (sausage)
+                    # ✅ CASE 2: Normal unit sale (sausage)
+                    else:
+                        item.unit_price = product.wholesale_price if stype == "wholesale" else product.unit_price
+
+                        if product.is_weighted:
+                            # If weighted product but user didn’t choose weight size, block it
+                            raise ValueError(f"{product.name} is weighted. Please select a weight size.")
+                        if qty > product.quantity:
+                            raise ValueError(f"Not enough stock for {product.name}. Available: {product.quantity}")
+
+                        product.quantity = max(0, product.quantity - qty)
+                        product.save(update_fields=["quantity"])
+
+                    item.save()
+                    subtotal += item.line_total()
+
+                # totals
+                discount = Decimal(sale.discount or Decimal("0.00"))
+                after_discount = max(Decimal("0.00"), subtotal - discount)
+
+                apply_vat = bool(sale.apply_vat)
+                vat = (after_discount * VAT_RATE).quantize(Decimal("0.01")) if apply_vat else Decimal("0.00")
+                grand = (after_discount + vat).quantize(Decimal("0.01"))
+
+                sale.subtotal_amount = after_discount
+                sale.vat_amount = vat
+                sale.total_amount = grand
+                sale.save(update_fields=["subtotal_amount", "vat_amount", "total_amount"])
+
+                # credit
+                if sale.is_credit:
+                    amount_paid = Decimal(sale_form.cleaned_data.get("amount_paid") or Decimal("0.00"))
+                    amount_paid = max(Decimal("0.00"), min(amount_paid, grand))
+
+                    if amount_paid > 0:
+                        CreditPayment.objects.create(
+                            sale=sale,
+                            amount=amount_paid,
+                            payment_method="cash",
+                            reference="",
+                            received_by=request.user,
+                        )
+
+                    sale.recalc_credit(save=True)
                 else:
-                    item.unit_price = product.wholesale_price if stype == "wholesale" else product.unit_price
+                    # fully paid
+                    sale.amount_paid = sale.total_amount
+                    sale.save(update_fields=["amount_paid"])
 
-                    if product.is_weighted:
-                        # If weighted product but user didn’t choose weight size, block it
-                        raise ValueError(f"{product.name} is weighted. Please select a weight size.")
-                    if qty > product.quantity:
-                        raise ValueError(f"Not enough stock for {product.name}. Available: {product.quantity}")
-
-                    product.quantity = max(0, product.quantity - qty)
-                    product.save(update_fields=["quantity"])
-
-                item.save()
-                subtotal += item.line_total()
-
-            # totals
-            discount = Decimal(sale.discount or Decimal("0.00"))
-            after_discount = max(Decimal("0.00"), subtotal - discount)
-
-            apply_vat = bool(sale.apply_vat)
-            vat = (after_discount * VAT_RATE).quantize(Decimal("0.01")) if apply_vat else Decimal("0.00")
-            grand = (after_discount + vat).quantize(Decimal("0.01"))
-
-            sale.subtotal_amount = after_discount
-            sale.vat_amount = vat
-            sale.total_amount = grand
-            sale.save(update_fields=["subtotal_amount", "vat_amount", "total_amount"])
-
-            # credit
-            if sale.is_credit:
-                amount_paid = Decimal(sale_form.cleaned_data.get("amount_paid") or Decimal("0.00"))
-                amount_paid = max(Decimal("0.00"), min(amount_paid, grand))
-
-                if amount_paid > 0:
-                    CreditPayment.objects.create(
-                        sale=sale,
-                        amount=amount_paid,
-                        payment_method="cash",
-                        reference="",
-                        received_by=request.user,
-                    )
-
-                sale.recalc_credit(save=True)
-            else:
-                # fully paid
-                sale.amount_paid = sale.total_amount
-                sale.save(update_fields=["amount_paid"])
-
-            return redirect("sale_receipt", sale_id=sale.id)
-
+                print(f"Redirecting to receipt for sale {sale.id}")
+                return redirect("sale_receipt", sale_id=sale.id)
+            except Exception as e:
+                print(f"Exception during saving: {str(e)}")
+                sale_form.add_error(None, f"Error saving sale: {str(e)}")
     else:
         sale_form = SaleForm()
         formset = ItemFormset()
-
     return render(request, "sales/create_sale.html", {
         "sale_form": sale_form,
         "formset": formset,
@@ -358,6 +368,7 @@ def credit_payment_add(request, sale_id):
         form = CreditPaymentForm()
 
     return render(request, "sales/credit_payment_add.html", {"sale": sale, "form": form})
+
 def receipt_view(request, sale_id):
     sale = get_object_or_404(Sale, id=sale_id)
     items = sale.items.all()
@@ -369,7 +380,7 @@ def receipt_view(request, sale_id):
     p.setFont("Helvetica-Bold", 14)
     p.drawCentredString(width/2, height - 20, "❄️ FRESH CHILL COLD STORE ❄️")
     p.setFont("Helvetica", 9)
-    p.drawCentredString(width/2, height - 34, "Accra - Ghana | Tel: +233 54 000 0000")
+    p.drawCentredString(width/2, height - 34, "Accra - Ghana | Tel: +233 20 854 3630")
 
     y = height - 56
     p.setFont("Helvetica", 8)

@@ -12,14 +12,10 @@ class SaleForm(forms.ModelForm):
         model = Sale
         fields = [
             "customer_name", "customer_phone",
-            "sale_type",
             "payment_method", "discount",
             "apply_vat",
             "amount_paid", "due_date"
         ]
-        widgets = {
-            'sale_type': forms.RadioSelect(attrs={'class': 'sale-type-radio'}),
-        }
 
     def clean(self):
         cleaned = super().clean()

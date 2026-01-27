@@ -7,23 +7,7 @@ from django.utils import timezone
 from django.db.models import Sum
 
 
-# class ProductWeightPrice(models.Model):
-#     """
-#     Defines weight sizes & prices for weighted products (Fish, Salmon, etc.)
-#     Example: 5kg, 10kg, 20kg...
-#     """
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="weight_prices")
-#     weight_kg = models.DecimalField(max_digits=10, decimal_places=2)  # e.g. 5, 10, 20, 30
-#     retail_price = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-#     wholesale_price = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-#     is_active = models.BooleanField(default=True)
 
-#     class Meta:
-#         ordering = ["weight_kg"]
-#         unique_together = ("product", "weight_kg")
-
-#     def __str__(self):
-#         return f"{self.product.name} - {self.weight_kg}kg"
 
 
 class Sale(models.Model):
@@ -110,19 +94,6 @@ class SaleItem(models.Model):
         if self.weight_price:
             return f"{pname} {self.weight_price.weight_kg}kg x {self.quantity}"
         return f"{pname} x {self.quantity}"
-    # def weight_kg(self):
-    #     return self.weight_price.weight_kg if self.weight_price else Decimal("0.00")
-
-    # def total_kg(self):
-    #     return (self.weight_kg() * Decimal(self.quantity)).quantize(Decimal("0.01"))
-
-    # def line_total(self):
-    #     return (Decimal(self.quantity) * (self.unit_price or Decimal("0.00"))).quantize(Decimal("0.01"))
-
-    # def __str__(self):
-    #     pname = self.product.name if self.product else "Deleted Product"
-    #     w = self.weight_kg()
-    #     return f"{pname} ({w}kg) x {self.quantity}"
 
 
 class CreditPayment(models.Model):
