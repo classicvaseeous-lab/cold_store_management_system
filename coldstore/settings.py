@@ -228,3 +228,10 @@ LOGOUT_REDIRECT_URL = '/users/login/'
 
 # Ama
 # Pwe: Ama@0707@
+# 
+# 
+# 
+# Waawan
+# Pwe: Waawan@0707@
+# Parker
+# Pwe: Parker@0707@

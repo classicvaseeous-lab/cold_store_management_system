@@ -94,7 +94,9 @@ def consume_weight_from_product(product, kg_to_sell: Decimal):
 @transaction.atomic
 def create_sale(request):
     ItemFormset = formset_factory(SaleItemForm, extra=1)
-    stype = user_sale_type(request.user)
+    stype = user_sale_type(request.user) # to prevent forcing sale type based on user group
+    # stype = None  # will come from the form so it could change from reatil to wholesale and vice versa
+
 
     # used by your JS to populate weight dropdown & prices
     weights_json = {}
@@ -133,6 +135,9 @@ def create_sale(request):
                 sale = sale_form.save(commit=False)
                 sale.created_by = request.user
                 sale.sale_type = stype
+                sale.sale_type = sale_form.cleaned_data.get("sale_type") or "retail"
+                # stype = sale.sale_type  # so the rest of your code uses it.Now pricing logic will automatically follow stype.
+
                 sale.is_credit = (sale.payment_method == "credit")
                 sale.save()
 

@@ -13,7 +13,7 @@ class SaleForm(forms.ModelForm):
         fields = [
             "customer_name", "customer_phone",
             "payment_method", "discount",
-            "apply_vat",
+            # "apply_vat",
             "amount_paid", "due_date"
         ]
 

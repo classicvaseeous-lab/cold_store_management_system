@@ -48,7 +48,7 @@
     <h2 class="text-2xl font-bold text-slate-800 dark:text-white">🧾 Create Sale</h2>
     <div class="text-sm text-slate-600 dark:text-slate-300">
       Sale Type: <b>{{ sale_type|title }}</b>
-    </div>
+    </div> 
   </div>
 
   <form method="post" id="saleForm" class="space-y-6">
@@ -56,6 +56,7 @@
     {{ formset.management_form }}
     <!-- Sale Info -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
       <div>
         <label class="text-sm text-slate-700 dark:text-slate-200">Customer Name</label>
         {{ sale_form.customer_name|add_class:"w-full rounded-xl p-2 sm:p-3 border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-700" }}
@@ -89,11 +90,12 @@
         <label class="text-sm text-slate-700 dark:text-slate-200">Discount (₵)</label>
         {{ sale_form.discount|add_class:"w-full rounded-xl p-2 sm:p-3 border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-700" }}
       </div>
-
-      <div class="flex items-center gap-2 sm:col-span-1">
+{% comment %} you commeted out vat because the client asked you to do so. and this cleint was the same person who said it should
+be changed to 4% as that is their vat rate but late said that they added the vat alreaddy to the price of their goods {% endcomment %}
+      {% comment %} <div class="flex items-center gap-2 sm:col-span-1">
         {{ sale_form.apply_vat|add_class:"h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-950" }}
         <label class="text-sm text-slate-700 dark:text-slate-200">Apply VAT</label>
-      </div>
+      </div> {% endcomment %}
     </div>
 
     <!-- Items -->
@@ -158,11 +160,11 @@
           <span>Discount</span>
           <span>₵ <span id="discountAmount">0.00</span></span>
         </div>
-
+{% comment %} 
         <div class="flex justify-between py-1 text-slate-700 dark:text-slate-200">
           <span>VAT (<span id="vatRateLabel">0%</span>)</span>
           <span>₵ <span id="vatAmount">0.00</span></span>
-        </div>
+        </div> {% endcomment %}
 
         <div class="border-t border-slate-200 dark:border-slate-700 mt-3 pt-3 flex justify-between font-bold text-lg text-slate-900 dark:text-white">
           <span>Grand Total</span>
@@ -217,10 +219,16 @@
 <script>
   const WEIGHTS = {{ weights_json|safe }};
   const PRODUCTS = {{ products_json|safe }};
-  const SALE_TYPE = "{{ sale_type }}";
+  const SALE_TYPE = "{{ sale_type }}";   
+  //commented out to prevent changing prices when sale type is changed
+//  function getSaleType(){
+//  const v = $("select[name='sale_type']").val();
+//  return v || "retail";
+//}
+
 
   // ✅ IMPORTANT: Make VAT match your backend (must match sales/views.py)
-  const VAT_RATE = 0.04;
+  const VAT_RATE = 0.04;//// 
 
   function initSelect2(scope){
     $(scope).find("select.product-select").select2({ width: "100%" });
@@ -276,7 +284,11 @@
   // ✅ set correct unit price for unit products
   const info = PRODUCTS[String(productId)];
   if (info) {
-    const price = (SALE_TYPE === "wholesale") ? info.wholesale_price : info.retail_price;
+    // commented out to prevent changing prices when sale type is changed
+    //const price = (getSaleType() === "wholesale") ? info.wholesale_price : info.retail_price;
+
+
+    const price = (SALE_TYPE === "wholesale") ? info.wholesale_price : info.retail_price;  
     unitPrice.val(Number(price || 0).toFixed(2));
   } else {
     unitPrice.val("0.00");
@@ -291,6 +303,9 @@
 
     const sizes = WEIGHTS[String(productId)] || [];
     sizes.forEach(s => {
+    // commented out to prevent changing prices when sale type is changed
+    //const price = (getSaleType() === "wholesale") ? s.wholesale_price : s.retail_price;
+
       const price = (SALE_TYPE === "wholesale") ? s.wholesale_price : s.retail_price;
       const opt = new Option(`${s.label} — ₵${Number(price).toFixed(2)}`, s.id, false, false);
       $(opt).attr("data-price", price);
@@ -300,6 +315,19 @@
     unitPrice.val("0.00");
     lockPrice(row, true);
   }
+   
+
+//commented out to prevent changing prices when sale type is changed
+
+//$("select[name='sale_type']").on("change", function(){
+//  $(".item-row").each(function(){
+//    populateSizes(this);
+//    updatePriceFromSize(this);
+//  });
+//  calcTotals();
+//});
+//remember to change it or remove it.
+
 
   function updatePriceFromSize(row){
     const sizeSelect = $(row).find("select.weight-size-select");
